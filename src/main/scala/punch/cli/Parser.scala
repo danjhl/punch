@@ -2,10 +2,9 @@ package punch.cli
 
 import fastparse._, NoWhitespace._
 
-
 object Parser {
   def parseLine(line: String): Either[ParseError, ReplCommand] = {
-    parse(line, Expressions.command(_)) match {
+    parse(line, Expressions.replCommand(_)) match {
       case Parsed.Success(cmd, _)  => Right(cmd)
       case Parsed.Failure(_, _, _) => Left(ParseError("fail"))
     }
@@ -13,7 +12,7 @@ object Parser {
 }
 
 private object Expressions {
-  def command[_ : P]: P[ReplCommand] = P(
+  def replCommand[_ : P]: P[ReplCommand] = P(
     ls
     | now
     | rm
@@ -66,16 +65,16 @@ private object Expressions {
 case class ParseError(message: String)
 
 sealed trait ReplCommand
-final case object Ls extends ReplCommand
-final case object Stop extends ReplCommand
-final case object Exit extends ReplCommand
-final case class Now(activityName: String) extends ReplCommand
-final case class Rm(activityName: String) extends ReplCommand
-final case class Punch(projectName: String) extends ReplCommand
-final case class Add(day: Int,
-                     month: Option[Int],
-                     year: Option[Int],
-                     startHour: Int,
-                     startMinute: Option[Int],
-                     stopHour: Int,
-                     stopMinute: Option[Int]) extends ReplCommand
+case object Ls extends ReplCommand
+case object Stop extends ReplCommand
+case object Exit extends ReplCommand
+case class Now(activityName: String) extends ReplCommand
+case class Rm(activityName: String) extends ReplCommand
+case class Punch(projectName: String) extends ReplCommand
+case class Add(day: Int,
+               month: Option[Int],
+               year: Option[Int],
+               startHour: Int,
+               startMinute: Option[Int],
+               stopHour: Int,
+               stopMinute: Option[Int]) extends ReplCommand

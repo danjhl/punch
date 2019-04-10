@@ -4,9 +4,9 @@ import cats.effect.IO
 
 object Cli {
   def interpret(args: Array[String]): IO[Unit] = {
-    Commands.parse(args) match {
-      case Right(HelpCmd)                => Help.show()
-      case Right(SwitchCmd(projectName)) => Repl.start(projectName)
+    Commands.interpret(args) match {
+      case Right(ShowHelp)               => Help.show()
+      case Right(Switch(projectName))    => Repl.start(projectName)
       case Left(UnknownCommand)          => unknown(args)
     }
   }

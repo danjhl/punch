@@ -2,7 +2,7 @@ package punch.cli
 
 object PrettyText {
   def pretty(activities: Seq[Activity]): String = {
-    if (activities.isEmpty)
+    if (activities.isEmpty) 
       ""
     else 
       prettyNonEmpty(activities)
@@ -10,27 +10,23 @@ object PrettyText {
 
   private def prettyNonEmpty(activities: Seq[Activity]): String = {
     val leftWidth = activities.map(_.name.length).max
-    val rightWidth = activities.map(_.timeInSeconds.toString.length).max
+    val rightWidth = activities.map(_.seconds.toString.length).max
 
     activities.map(single(_, leftWidth, rightWidth)).mkString("\n")
   }
 
   private def single(a: Activity, leftWidth: Int, rightWidth: Int) = {
-    val padding1 = paddingDotted(leftWidth, a.name.length)
-    val padding2 = padding(rightWidth, a.timeInSeconds.toString.length)
-    s"${a.name}${padding1}${padding2}${a.timeInSeconds}"
+    val end = leftWidth + rightWidth - a.seconds.toString.length
+    val padding = paddingDotted(a.name.length, end)
+    s"${a.name}${padding}${a.seconds}"
   }
 
-  private def paddingDotted(width: Int, strLen: Int) = {
-    val uneven = (_: Int) % 2 == 1
-    val begin = (_: Int) == strLen
-    val end = (_: Int) == width
-    val dot = (n: Int) => if (uneven(n) || begin(n) || end(n)) " " else "·"
+  private def paddingDotted(start: Int, end: Int) = {
+    val uneven = (_: Int) % 2 == 0
+    val first = (_: Int) == start
+    val last = (_: Int) == end
+    val dot = (n: Int) => if (uneven(n) || first(n) || last(n)) " " else "·"
 
-    (strLen to width).map(dot).mkString
-  }
-
-  private def padding(width: Int, strLen: Int) = {
-    (strLen until width).map(_ => " ").mkString
+    (start to end).map(dot).mkString
   }
 }

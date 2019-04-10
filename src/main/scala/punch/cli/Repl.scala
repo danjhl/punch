@@ -7,7 +7,7 @@ import cats.effect.IO
 object Repl {
   def start(projectName: String): IO[Unit] = {
     IO {  
-      val terminal = TerminalBuilder.terminal();
+      val terminal = TerminalBuilder.terminal()
       val reader = LineReaderBuilder.builder().terminal(terminal).build()
       val prompt = s"${Console.BLUE}punch> "
 
@@ -16,21 +16,32 @@ object Repl {
       while (true) {
           val line = reader.readLine(prompt)
           val cmd = Parser.parseLine(line)
-          cmd.map(eval)
+
+          // remove unsafeRun
+          cmd.map(eval).map(_.unsafeRunSync())
       }
     }
   }
 
   // TODO return error
-  def eval(cmd: ReplCommand): IO[Unit] = {
-    IO {
-      cmd match {
-        case Ls => println("ls")
-        // TODO handle all remove _
-        case _ => println("unknown command")
-      }
+  // to persistenc
+  private def eval(cmd: ReplCommand): IO[Unit] = {
+    cmd match {
+      case Ls => ls()
+      case Now(activityName) => IO { println(s"tracking $activityName") }
+      // TODO handle all remove _
+      case _ => IO { println("unknown command") }
     }
   }
 
-  // to persistenc
+  private def ls(): IO[Unit] = {
+    // todo use jline Console write
+    for {
+      result <- Persistence.readActivities()
+      _      <- IO { println("activities: \n") }
+      // todo handle error
+      _      <- IO { result.map(x => println(PrettyText.pretty(x))) }
+    } yield ()
+  }
+
 }

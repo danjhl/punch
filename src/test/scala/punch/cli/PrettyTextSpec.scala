@@ -11,15 +11,15 @@ class PrettyTextSpec extends FunSpec with Matchers {
     }
 
     it("should prettyfy multiple activities") {
-      val v = Vector(Activity("alongname", "p", 100, 200),
+      val v = Vector(Activity("alongname", "p", 10, 100010),
                      Activity("a", "p", 100, 300),
                      Activity("ashort", "p", 10, 1010),
                      Activity("ashort", "p", 10, 100010))
 
-      check(v) shouldEqual """|alongname    100
-                              |a · · · ·    200
-                              |ashort  ·   1000
-                              |ashort  · 100000""".stripMargin
+      check(v) shouldEqual """|alongname 100000
+                              |a  · · · · · 200
+                              |ashort · ·  1000
+                              |ashort ·  100000""".stripMargin
     }
 
     it("should prettyfy empty seq") {

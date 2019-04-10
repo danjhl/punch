@@ -3,7 +3,9 @@ package punch.cli
 import org.scalatest._
 
 class ParserSpec extends FunSpec with Matchers {
-  describe("Parser") {
+  describe("Parser#parseLine") {
+    val check = Parser.parseLine(_)
+
     it("should parse ls") {
       check("ls") shouldEqual Right(Ls)
     }
@@ -54,6 +56,4 @@ class ParserSpec extends FunSpec with Matchers {
       check("add 200 5:10-5:10").isLeft shouldEqual true
     }
   }
-
-  def check(line: String) = Parser.parseLine(line)
 }

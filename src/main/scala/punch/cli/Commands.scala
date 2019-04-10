@@ -1,9 +1,9 @@
 package punch.cli
 
 object Commands {
-  def parse(args: Seq[String]): Either[InterpretError, Command] = args match {
-    case Seq(Patterns.help(_)) => Right(HelpCmd)
-    case Seq(projectName)      => Right(SwitchCmd(projectName))
+  def interpret(args: Seq[String]): Either[CommandError, Command] = args match {
+    case Seq(Patterns.help(_)) => Right(ShowHelp)
+    case Seq(projectName)      => Right(Switch(projectName))
     case _                     => Left(UnknownCommand)
   }
 }
@@ -13,8 +13,8 @@ private object Patterns {
 }
 
 sealed trait Command
-object HelpCmd extends Command
-case class SwitchCmd(projectName: String) extends Command
+object ShowHelp extends Command
+case class Switch(projectName: String) extends Command
 
-sealed trait InterpretError
-final case object UnknownCommand extends InterpretError
+sealed trait CommandError
+final case object UnknownCommand extends CommandError
