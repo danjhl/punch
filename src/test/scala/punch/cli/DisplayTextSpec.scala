@@ -2,9 +2,9 @@ package punch.cli
 
 import org.scalatest._
 
-class PrettyTextSpec extends FunSpec with Matchers {
-  describe("PrettyText") {
-    val check = PrettyText.pretty(_)
+class DisplayTextSpec extends FunSpec with Matchers {
+  describe("DisplayText#pretty") {
+    val check = DisplayText.listActivities(_)
 
     it("should prettyfy activity") {
       check(Vector(Activity("a", "p", 100, 200))) shouldEqual "a 100"
@@ -24,6 +24,26 @@ class PrettyTextSpec extends FunSpec with Matchers {
 
     it("should prettyfy empty seq") {
       check(Vector()) shouldEqual ""
+    }
+  }
+
+  describe("DisplayText#list") {
+    val check = DisplayText.list(_)
+
+    it("should create list of empty seq") {
+      check(Seq()) shouldEqual ""
+    }
+
+    it("should create list of seq") {
+      val s = Seq(("alongname", "100000"),
+                  ("a", "200"),
+                  ("ashort", "1000"),
+                  ("ashort", "100000"))
+
+      check(s) shouldEqual """|alongname 100000
+                              |a  · · · · · 200
+                              |ashort · ·  1000
+                              |ashort ·  100000""".stripMargin
     }
   }
 }
