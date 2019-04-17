@@ -11,7 +11,7 @@ object Repl {
   // TODO remove
   var state: Option[(String, Long)] = None
 
-  def start(projectName: String): IO[Unit] = {
+  def start(project: String): IO[Unit] = {
     IO {  
       val terminal = TerminalBuilder.terminal()
       val reader = LineReaderBuilder.builder().terminal(terminal).build()
@@ -26,28 +26,35 @@ object Repl {
           val cmd = Parser.parseLine(line)
 
           // remove unsafeRun
-          cmd.map(eval(_, projectName)).map(_.unsafeRunSync())
+          cmd.map(eval(_, project)).map(_.unsafeRunSync())
       }
     }
   }
 
   // TODO return error
   // to persistenc
-  private def eval(cmd: ReplCommand, projectName: String): IO[Unit] = {
+  private def eval(cmd: ReplCommand, project: String): IO[Unit] = {
     // TODO handle all remove _
 
     cmd match {
-      case Ls                => Persistence.readActivities().flatMap(print)
-      case Now(activityName) => IO {
-                                  println(s"tracking ${projectName}/${activityName}")
-                                  state = Some((activityName, 
-                                                Instant.now().getEpochSecond)) 
-                                }
-      case Stop              => state match {
-                                  case Some(t) => store(t, projectName)
-                                  case None => IO { println("not tracking") }
-                                }
-      case _                 => IO { println("unknown command") }
+      case Ls            => Persistence.readActivities().flatMap(print)
+      case Now(activity) => now(project, activity)
+      case Stop          => stop(project)
+      case _             => IO { println("unknown command") }
+    }
+  }
+
+  private def now(project: String, activity: String) = {
+    IO {
+      println(s"tracking ${project}/${activity}")
+      state = Some((activity, Instant.now().getEpochSecond)) 
+    }
+  }
+
+  private def stop(project: String) = {
+    state match {
+      case Some(t) => store(t, project).flatMap(_ => IO { state = None })
+      case None    => IO { println("not tracking") }
     }
   }
 
@@ -64,7 +71,7 @@ object Repl {
       result match {
         case Success(seq) =>
           println("activities: \n")
-          println(DisplayText.listActivities(seq))
+          println(DisplayText.listSums(seq))
         case Failure(t) => 
           scribe.error(t.getMessage())
       }

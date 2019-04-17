@@ -5,6 +5,22 @@ object DisplayText {
     list(activities.map(a => (a.name, a.seconds.toString)))
   }
 
+  def listSums(activities: Seq[Activity]): String = {
+    val names = activities.map(_.name).toSet
+    val set = names
+      .map(name => (name, activities.filter(_.name == name)))
+      .map(x => (x._1, x._2.map(_.seconds).sum))
+      .map(x => (x._1, time(x._2)))
+
+    list(set.toSeq)
+  }
+
+  def time(seconds: Long) = {
+    val hours = seconds / 3600
+    val minutes = seconds % 3600 / 60
+    f"$hours%2d h $minutes%2d m"
+  }
+
   def list(seq: Seq[(String, String)]): String = {
     if (seq.isEmpty)
       ""
