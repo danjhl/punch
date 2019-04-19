@@ -41,7 +41,9 @@ class PersistenceSpec extends FunSpec with Matchers {
   describe("Persistence#convert") {
     it("should convert activity") {
       val a = Activity("name", "project", 1, 2)
-      Persistence.convert(a) shouldEqual "\n" + """{"name": "name", "project": "project", "from": 1, "to": 2, "seconds": 1}"""
+      Persistence.convert(a) shouldEqual 
+        """{"name": "name", "project": "project",""" + 
+        """ "from": 1, "to": 2, "seconds": 1}"""
     }
   }
 }

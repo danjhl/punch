@@ -7,7 +7,9 @@ class ParserSpec extends FunSpec with Matchers {
     val check = Parser.parseLine(_)
 
     it("should parse ls") {
-      check("ls") shouldEqual Right(Ls)
+      check("ls") shouldEqual Right(Ls(None))
+      check("ls -w") shouldEqual Right(Ls(Some(Week)))
+      check("ls -d") shouldEqual Right(Ls(Some(Day)))
     }
 
     it("should parse now") {

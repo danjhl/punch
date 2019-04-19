@@ -22,13 +22,17 @@ private object Expressions {
     | exit
   )
 
-  def ls[_ : P]       = P("ls").!.map(c => Ls)
+  def ls[_ : P]       = P("ls" ~ (" " ~ timeP).?).map(c => Ls(c))
   def stop[_ : P]     = P("stop").!.map(c => Stop)
   def exit[_ : P]     = P("exit").!.map(c => Exit)
   def now[_ : P]      = P("now" ~/ " " ~ (escaped | str)).map(c => Now(c))
   def rm[_ : P]       = P("rm" ~/ " " ~ (escaped | str)).map(c => Rm(c))
   def punch[_ : P]    = P("punch" ~/ " " ~ (escaped | str)).map(c => Punch(c))
   def add[_ : P]      = P("add" ~/ " " ~ date ~/ " " ~ frame).map(toAdd)
+
+  def timeP[_ : P]    = P(weekP | dayP)
+  def weekP[_ : P]    = P("-w").!.map(c => Week)
+  def dayP[_ : P]     = P("-d").!.map(c => Day)
 
   def str[_ : P]      = P(CharsWhile(_ != ' ')).!
   def escaped[_ : P]  = P(escaped1 | escaped2)
@@ -65,7 +69,6 @@ private object Expressions {
 case class ParseError(message: String)
 
 sealed trait ReplCommand
-case object Ls extends ReplCommand
 case object Stop extends ReplCommand
 case object Exit extends ReplCommand
 case class Now(activityName: String) extends ReplCommand
@@ -78,3 +81,9 @@ case class Add(day: Int,
                startMinute: Option[Int],
                stopHour: Int,
                stopMinute: Option[Int]) extends ReplCommand
+
+case class Ls(time: Option[TimePara]) extends ReplCommand
+
+sealed trait TimePara
+case object Day extends TimePara
+case object Week extends TimePara

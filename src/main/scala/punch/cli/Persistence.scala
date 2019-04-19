@@ -1,13 +1,13 @@
 package punch.cli
 
 import cats.effect.IO
-import scala.util.{Try, Success}
+import scala.util.{Try, Success, Failure}
 import java.nio.file.{Files, Paths, StandardOpenOption}
 
 trait Store {
   def writeActivity(activity: Activity): IO[Try[Unit]]
   def readActivities(): IO[Try[Seq[Activity]]]
-  // deleteActivities(name: String): IO[Try[Unit]]
+  def deleteActivities(name: String): IO[Try[Unit]]
   // deleteProject(name: String): IO[Try[Unit]]
 }
 
@@ -23,14 +23,13 @@ object Persistence extends Store {
   def writeActivity(activity: Activity): IO[Try[Unit]] = {
     IO {
       Try(Files.write(Paths.get(file),
-        convert(activity).getBytes(), StandardOpenOption.APPEND))
+        ("\n" + convert(activity)).getBytes(), StandardOpenOption.APPEND))
     }
   }
 
-  // TODO test
   def convert(activity: Activity): String = {
     val a = activity
-    s"""\n{"name": "${a.name}", "project": "${a.project}", """ +
+    s"""{"name": "${a.name}", "project": "${a.project}", """ +
       s""""from": ${a.from}, "to": ${a.to}, "seconds": ${a.seconds}}"""
   }
 
@@ -59,5 +58,19 @@ object Persistence extends Store {
       Nil
     else
       str.split("\n").zipWithIndex.map(e => parseLine(e._1, e._2))
+  }
+
+  def deleteActivities(activity: String): IO[Try[Unit]] = {
+    for {
+      result     <- readActivities()
+      activities <- result match {
+                      case Success(activities) => IO { activities }
+                      case Failure(err) => IO { scribe.error(err.getMessage); Nil }
+                    }
+      filtered   <- IO { activities.filter(_.name != activity).map(convert).mkString("\n") }
+      res          <- IO {
+                      Try(Files.write(Paths.get(file), filtered.getBytes)).map(_ => {})
+                    }
+    } yield res
   }
 }

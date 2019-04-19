@@ -1,7 +1,7 @@
 package punch.cli
 
 import org.scalatest._
-import java.time.{LocalDate, LocalTime, ZoneOffset, Month}
+import java.time.{LocalDate, LocalTime, ZoneId, ZoneOffset, Month}
 
 class ActivitySpec extends FunSpec with Matchers {
   describe("Activity") {
@@ -17,7 +17,7 @@ class ActivitySpec extends FunSpec with Matchers {
       val dayDate = LocalDate.of(2019, Month.APRIL, day)
         .toEpochSecond(LocalTime.MIN, ZoneOffset.MIN)
 
-      Activity.inWeek(dayDate, weekDayDate, ZoneOffset.MIN)
+      Activity.inWeek(dayDate, weekDayDate, ZoneId.of("UTC"))
     }
 
     it("should return true for day in week") {
@@ -35,6 +35,24 @@ class ActivitySpec extends FunSpec with Matchers {
 
     it("should return false for day before week") {
       check(7, 11) shouldEqual false
+    }
+  }
+
+  describe("Activity#onDay") {
+    val check = (day: Int, weekDay: Int) => {
+      val today = LocalDate.of(2019, Month.APRIL, weekDay);
+      val date = LocalDate.of(2019, Month.APRIL, day)
+        .toEpochSecond(LocalTime.MIN, ZoneOffset.MIN)
+
+      Activity.onDay(date, today, ZoneId.of("UTC"))
+    }
+
+    it("should return true for same day") {
+      check(10, 10) shouldEqual true
+    }
+
+    it("should return false for different days") {
+      check(11, 10) shouldEqual false
     }
   }
 }
