@@ -2,8 +2,7 @@ package punch.cli
 
 import scala.util.{Success, Failure, Try}
 import cats.effect.IO
-import cats.effect.concurrent.MVar
-import org.jline.terminal.TerminalBuilder
+import org.jline.terminal.{TerminalBuilder, Terminal}
 import org.jline.reader.{LineReaderBuilder, Candidate}
 import org.jline.reader.impl.completer.StringsCompleter
 import java.time.{LocalDate, Instant, ZoneId}
@@ -14,7 +13,13 @@ object Repl {
 
   def start(project: String): IO[Unit] = {
     IO {  
-      val terminal = TerminalBuilder.terminal()
+      val terminal = TerminalBuilder.builder()
+        .signalHandler(signal => {
+          println(signal)
+          if (signal == Terminal.Signal.QUIT) {exit(project)}
+        })
+        .build()
+
       val reader = LineReaderBuilder.builder()
         .completer((reader, line, candidates) => {
           if (line.line.matches("(now)\\s*?.*")) {
@@ -71,12 +76,13 @@ object Repl {
   }
 
   private def lsWith(fn: (Long, LocalDate, ZoneId) => Boolean) = {
-    Persistence.readActivities()
-      .map(result => 
-        result.map(seq => 
-          seq.filter(activity => 
-            fn(activity.seconds, LocalDate.now(), ZoneId.systemDefault()))))
-              .flatMap(print)
+    val filter = fn(_, LocalDate.now(), ZoneId.systemDefault())
+
+    for {
+      result   <- Persistence.readActivities()
+      filtered <- IO { result.map(seq => seq.filter(a => filter(a.seconds))) }
+      effect   <- IO[Unit] { print(filtered) }
+    } yield effect 
   }
 
   private def now(project: String, activity: String) = IO {

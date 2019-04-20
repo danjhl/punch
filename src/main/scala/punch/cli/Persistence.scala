@@ -69,8 +69,8 @@ object Persistence extends Store {
           .map(convert)
           .mkString("\n")
       }
-      res <- IO {
-        Try(Files.write(Paths.get(file), filtered.getBytes)).map(_ => {})
+      res <- IO[Try[Unit]] {
+        Try(Files.write(Paths.get(file), filtered.getBytes))
       }
     } yield res
   }
