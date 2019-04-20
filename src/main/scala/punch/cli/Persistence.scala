@@ -20,11 +20,9 @@ object Persistence extends Store {
     """"to"\s*:\s*(\d*)\s*,\s*""" +
     """"seconds"\s*:\s*(\d*)\}""").r
 
-  def writeActivity(activity: Activity): IO[Try[Unit]] = {
-    IO {
-      Try(Files.write(Paths.get(file),
-        ("\n" + convert(activity)).getBytes(), StandardOpenOption.APPEND))
-    }
+  def writeActivity(activity: Activity): IO[Try[Unit]] = IO {
+    val bytes = ("\n" + convert(activity)).getBytes()
+    Try(Files.write(Paths.get(file), bytes, StandardOpenOption.APPEND))
   }
 
   def convert(activity: Activity): String = {
@@ -33,24 +31,13 @@ object Persistence extends Store {
       s""""from": ${a.from}, "to": ${a.to}, "seconds": ${a.seconds}}"""
   }
 
-  def readActivities(): IO[Try[Seq[Activity]]] = {
-    IO {
-      for {
-        json       <- Try(new String(Files.readAllBytes(Paths.get(file))))
-        result     <- Try(parse(json))
-        _          <- Try(result.collect { case Left(err) => scribe.error(err) })
-        activities <- Try(result.collect { case Right(a) => a })
-      } yield activities
-    }
-  }
-
-  def parseLine(line: String, index: Int): Either[String, Activity] = {
-    line match {
-      case activityPattern(name, project, from, to, _) =>
-        Right(Activity(name, project, from.toLong, to.toLong))
-      case _ =>
-        Left(s"couldn't parse line: $index")
-    }
+  def readActivities(): IO[Try[Seq[Activity]]] = IO {
+    for {
+      json       <- Try(new String(Files.readAllBytes(Paths.get(file))))
+      result     <- Try(parse(json))
+      _          <- Try(result.collect { case Left(err) => scribe.error(err) })
+      activities <- Try(result.collect { case Right(a) => a })
+    } yield activities
   }
 
   def parse(str: String): Seq[Either[String, Activity]] = {
@@ -60,17 +47,31 @@ object Persistence extends Store {
       str.split("\n").zipWithIndex.map(e => parseLine(e._1, e._2))
   }
 
+  private def parseLine(line: String, index: Int): Either[String, Activity] = {
+    line match {
+      case activityPattern(name, project, from, to, _) =>
+        Right(Activity(name, project, from.toLong, to.toLong))
+      case _ =>
+        Left(s"couldn't parse line: $index")
+    }
+  }
+
   def deleteActivities(activity: String): IO[Try[Unit]] = {
     for {
-      result     <- readActivities()
+      result <- readActivities()
       activities <- result match {
-                      case Success(activities) => IO { activities }
-                      case Failure(err) => IO { scribe.error(err.getMessage); Nil }
-                    }
-      filtered   <- IO { activities.filter(_.name != activity).map(convert).mkString("\n") }
-      res          <- IO {
-                      Try(Files.write(Paths.get(file), filtered.getBytes)).map(_ => {})
-                    }
+        case Success(activities) => IO { activities }
+        case Failure(err)        => IO { scribe.error(err.getMessage); Nil }
+      }
+      filtered <- IO { 
+        activities
+          .filter(_.name != activity)
+          .map(convert)
+          .mkString("\n")
+      }
+      res <- IO {
+        Try(Files.write(Paths.get(file), filtered.getBytes)).map(_ => {})
+      }
     } yield res
   }
 }

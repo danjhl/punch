@@ -9,7 +9,7 @@ object Tasks {
   def installGraalVmUbuntu(): Unit = {
     val home = sys.env.get("HOME").get
 
-    val graalVersion = "1.0.0-rc8"
+    val graalVersion = "1.0.0-rc15"
     val graalDistribution = s"graalvm-ce-${graalVersion}"
     val graalParentDir = s"${home}/.local/share"
     val fileName = s"${graalDistribution}-linux-amd64.tar.gz"

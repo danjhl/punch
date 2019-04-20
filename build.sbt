@@ -8,11 +8,15 @@ lazy val root =
 // Settings
 
 lazy val rootSettings = 
-  Seq(name             := "punch"         ,
-      version          := "0.1.0-SNAPSHOT",
-      scalaVersion     := "2.12.8"        ,
-      organization     := "io.punch"      ,
-      organizationName := "punch"         ) ++ rootDeps
+  Seq(
+    name             := "punch"         ,
+    version          := "0.1.0-SNAPSHOT",
+    scalaVersion     := "2.12.8"        ,
+    organization     := "io.punch"      ,
+    organizationName := "punch"         ) ++ graalSettings ++ rootDeps
+
+lazy val graalSettings =
+  graalVMNativeImageOptions ++= Seq("--allow-incomplete-classpath")
 
 // Dependencies
 

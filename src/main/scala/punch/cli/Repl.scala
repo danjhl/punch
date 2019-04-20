@@ -6,7 +6,7 @@ import cats.effect.concurrent.MVar
 import org.jline.terminal.TerminalBuilder
 import org.jline.reader.{LineReaderBuilder, Candidate}
 import org.jline.reader.impl.completer.StringsCompleter
-import java.time.Instant
+import java.time.{LocalDate, Instant, ZoneId}
 
 object Repl {
   // TODO remove
@@ -30,67 +30,89 @@ object Repl {
       val prompt = s"${Console.BLUE}punch> "
 
       // TODO try to use foreverM
-      // or recursive?
+      // or recursive?import org.jline.terminal.TerminalBuilder
       // MVar ?
       // catch exceptions eg. ctrl + c
       while (true) {
-          val line = reader.readLine(prompt)
-          val cmd = Parser.parseLine(line)
-
-          // remove unsafeRun
-          cmd.map(eval(_, project)).map(_.unsafeRunSync())
+          import org.jline.reader.UserInterruptException
+          Try(reader.readLine(prompt)) match {
+            case Success(line) => 
+              val cmd = Parser.parseLine(line)
+              cmd.map(eval(_, project)).map(_.unsafeRunSync())
+            case Failure(err: UserInterruptException) =>
+              if (state.isDefined) stop(project).unsafeRunSync()
+              System.exit(0)
+            case Failure(err) =>
+              scribe.error(err.getMessage())
+              if (state.isDefined) stop(project).unsafeRunSync()
+          }
       }
     }
   }
 
   // TODO return error
-  import java.time.LocalDate
   private def eval(cmd: ReplCommand, project: String): IO[Unit] = {
     // TODO handle all remove _
 
     cmd match {
-      case Ls(p)         => p match {
-                              case None => Persistence.readActivities().flatMap(print)
-                              case Some(Day) => Persistence.readActivities()
-                                .map(t => t.map(x => x.filter(a => Activity.onDay(a.from, LocalDate.now(), java.time.ZoneId.systemDefault())))).flatMap(print)
-                              case Some(Week) => Persistence.readActivities()
-                                .map(t => t.map(x => x.filter(a => Activity.inWeek(a.from, LocalDate.now(), java.time.ZoneId.systemDefault())))).flatMap(print)
-                            }
+      case Ls(para)      => ls(para)
       case Now(activity) => now(project, activity)
       case Stop          => stop(project)
+      case Exit          => exit(project)
       case Rm(activity)  => Persistence.deleteActivities(activity).map(_ => {})
       case _             => IO { println("unknown command") }
     }
   }
 
-  private def now(project: String, activity: String) = {
-    IO {
-      println(s"tracking ${project}/${activity}")
-      state = Some((activity, Instant.now().getEpochSecond)) 
-    }
+  private def ls(para: Option[TimePara]) = para match {
+    case None       => Persistence.readActivities().flatMap(print)
+    case Some(Day)  => lsWith(Activity.onDay _)
+    case Some(Week) => lsWith(Activity.inWeek _)
   }
 
-  private def stop(project: String) = {
-    state match {
-      case Some(t) => store(t, project).flatMap(_ => IO { state = None })
-      case None    => IO { println("not tracking") }
-    }
+  private def lsWith(fn: (Long, LocalDate, ZoneId) => Boolean) = {
+    Persistence.readActivities()
+      .map(result => 
+        result.map(seq => 
+          seq.filter(activity => 
+            fn(activity.seconds, LocalDate.now(), ZoneId.systemDefault()))))
+              .flatMap(print)
   }
 
-  private def store(t: (String, Long), projectName: String) = {
-    val act = Activity(t._1, projectName, t._2, Instant.now().getEpochSecond)
-    Persistence.writeActivity(act).map(result => result match {
-      case Success(_)   => {}
+  private def now(project: String, activity: String) = IO {
+    println(s"tracking ${project}/${activity}")
+    state = Some((activity, Instant.now().getEpochSecond)) 
+  }
+
+  private def stop(project: String) = state match {
+    case Some((activity, time)) => store(project, activity, time)
+    case None                   => IO { println("not tracking") }
+  }
+
+  private def store(project: String, activity: String, from: Long) = {
+    val to = Instant.now().getEpochSecond
+    val act = Activity(activity, project, from, to)
+    
+    Persistence.writeActivity(act).map {
+      case Success(_)   => state = None
       case Failure(err) => scribe.error(err.getMessage)
-    })
+    }
   }
 
-  private def print(result: Try[Seq[Activity]]): IO[Unit] = {
-    result match {
-      case Success(seq) => 
-        IO { println("activities: \n\n" + DisplayText.listSums(seq)) }
-      case Failure(t) => 
-        IO { scribe.error(t.getMessage()) }
-    }
+  private def print(result: Try[Seq[Activity]]): IO[Unit] = result match {
+    case Success(seq) =>
+      IO { 
+        println("activities: \n")
+        println(DisplayText.listSums(seq)) 
+      }
+    case Failure(t) => 
+      IO { scribe.error(t.getMessage()) }
+  }
+
+  private def exit(project: String) = {
+    if (state.isDefined) 
+      stop(project).flatMap(x => IO { System.exit(0) })
+    else 
+      IO { System.exit(0) }
   }
 }
