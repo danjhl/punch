@@ -22,7 +22,7 @@ private object Expressions {
     | exit
   )
 
-  def ls[_ : P]       = P("ls" ~ (" " ~ timeP).?).map(c => Ls(c))
+  def ls[_ : P]       = P("ls" ~/ (" " ~ timeP).?).map(c => Ls(c))
   def stop[_ : P]     = P("stop").!.map(c => Stop)
   def exit[_ : P]     = P("exit").!.map(c => Exit)
   def now[_ : P]      = P("now" ~/ " " ~ (escaped | str)).map(c => Now(c))

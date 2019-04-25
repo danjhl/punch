@@ -3,10 +3,13 @@ package punch.cli
 import cats.effect.IO
 
 object Cli {
+  val store = Persistence
+
   def interpret(args: Seq[String]): IO[Unit] = {
     Commands.interpret(args) match {
       case Right(ShowHelp)            => Help.show()
       case Right(Switch(projectName)) => Repl.start(projectName)
+      case Right(RmProject(projectName)) => store.deleteProject(projectName).map(x => {})
       case Left(UnknownCommand)       => unknown(args)
     }
   }

@@ -8,22 +8,18 @@ import org.jline.reader.impl.completer.StringsCompleter
 import java.time.{LocalDate, Instant, ZoneId}
 
 object Repl {
+  val store = Persistence
   // TODO remove
   var state: Option[(String, Long)] = None
 
   def start(project: String): IO[Unit] = {
     IO {  
-      val terminal = TerminalBuilder.builder()
-        .signalHandler(signal => {
-          println(signal)
-          if (signal == Terminal.Signal.QUIT) {exit(project)}
-        })
-        .build()
+      val terminal = TerminalBuilder.terminal()
 
       val reader = LineReaderBuilder.builder()
         .completer((reader, line, candidates) => {
-          if (line.line.matches("(now)\\s*?.*")) {
-            Persistence.readActivities()
+          if (line.line.matches("((now)\\s*?.*)|((rm)\\s*?.*)")) {
+            store.readActivities()
               .map(t => t.map(s => s.map(_.name)
                 .toSeq
                 .foreach(name => candidates.add(new Candidate(name)))))
@@ -32,6 +28,7 @@ object Repl {
         })
         .terminal(terminal)
         .build()
+        
       val prompt = s"${Console.BLUE}punch> "
 
       // TODO try to use foreverM
@@ -60,28 +57,29 @@ object Repl {
     // TODO handle all remove _
 
     cmd match {
-      case Ls(para)      => ls(para)
+      case Ls(para)      => ls(para, project)
       case Now(activity) => now(project, activity)
       case Stop          => stop(project)
       case Exit          => exit(project)
-      case Rm(activity)  => Persistence.deleteActivities(activity).map(_ => {})
+      case Rm(activity)  => rm(activity, project)
       case _             => IO { println("unknown command") }
     }
   }
 
-  private def ls(para: Option[TimePara]) = para match {
-    case None       => Persistence.readActivities().flatMap(print)
-    case Some(Day)  => lsWith(Activity.onDay _)
-    case Some(Week) => lsWith(Activity.inWeek _)
+  // TODO only list current project
+  private def ls(para: Option[TimePara], project: String) = para match {
+    case None       => store.readActivitiesFor(project).flatMap(print)
+    case Some(Day)  => lsWith(Activity.onDay _, project)
+    case Some(Week) => lsWith(Activity.inWeek _, project)
   }
 
-  private def lsWith(fn: (Long, LocalDate, ZoneId) => Boolean) = {
+  private def lsWith(fn: (Long, LocalDate, ZoneId) => Boolean, project: String) = {
     val filter = fn(_, LocalDate.now(), ZoneId.systemDefault())
 
     for {
-      result   <- Persistence.readActivities()
-      filtered <- IO { result.map(seq => seq.filter(a => filter(a.seconds))) }
-      effect   <- IO[Unit] { print(filtered) }
+      result   <- store.readActivitiesFor(project)
+      filtered <- IO { result.map(seq => seq.filter(a => filter(a.from))) }
+      effect   <- print(filtered)
     } yield effect 
   }
 
@@ -91,15 +89,15 @@ object Repl {
   }
 
   private def stop(project: String) = state match {
-    case Some((activity, time)) => store(project, activity, time)
+    case Some((activity, time)) => save(project, activity, time)
     case None                   => IO { println("not tracking") }
   }
 
-  private def store(project: String, activity: String, from: Long) = {
+  private def save(project: String, activity: String, from: Long) = {
     val to = Instant.now().getEpochSecond
     val act = Activity(activity, project, from, to)
     
-    Persistence.writeActivity(act).map {
+    store.writeActivity(act).map {
       case Success(_)   => state = None
       case Failure(err) => scribe.error(err.getMessage)
     }
@@ -107,7 +105,7 @@ object Repl {
 
   private def print(result: Try[Seq[Activity]]): IO[Unit] = result match {
     case Success(seq) =>
-      IO { 
+      IO {
         println("activities: \n")
         println(DisplayText.listSums(seq)) 
       }
@@ -120,5 +118,12 @@ object Repl {
       stop(project).flatMap(x => IO { System.exit(0) })
     else 
       IO { System.exit(0) }
+  }
+
+  private def rm(activity: String, project: String) = {
+    store.deleteActivities(activity, project).map {
+      case Success(_)   => {}
+      case Failure(err) => scribe.error(err.getMessage())
+    }
   }
 }

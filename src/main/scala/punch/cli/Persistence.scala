@@ -7,8 +7,9 @@ import java.nio.file.{Files, Paths, StandardOpenOption}
 trait Store {
   def writeActivity(activity: Activity): IO[Try[Unit]]
   def readActivities(): IO[Try[Seq[Activity]]]
-  def deleteActivities(name: String): IO[Try[Unit]]
-  // deleteProject(name: String): IO[Try[Unit]]
+  def readActivitiesFor(project: String): IO[Try[Seq[Activity]]]
+  def deleteActivities(name: String, project: String): IO[Try[Unit]]
+  def deleteProject(name: String): IO[Try[Unit]]
 }
 
 object Persistence extends Store {
@@ -40,6 +41,16 @@ object Persistence extends Store {
     } yield activities
   }
 
+  def readActivitiesFor(project: String): IO[Try[Seq[Activity]]] = IO {
+    for {
+      json       <- Try(new String(Files.readAllBytes(Paths.get(file))))
+      result     <- Try(parse(json))
+      _          <- Try(result.collect { case Left(err) => scribe.error(err) })
+      activities <- Try(result.collect { case Right(a) => a })
+      filtered   <- Try(activities.filter(_.project == project))
+    } yield filtered
+  }
+
   def parse(str: String): Seq[Either[String, Activity]] = {
     if (str.isEmpty)
       Nil
@@ -56,7 +67,7 @@ object Persistence extends Store {
     }
   }
 
-  def deleteActivities(activity: String): IO[Try[Unit]] = {
+  def deleteActivities(activity: String, project: String): IO[Try[Unit]] = {
     for {
       result <- readActivities()
       activities <- result match {
@@ -65,7 +76,26 @@ object Persistence extends Store {
       }
       filtered <- IO { 
         activities
-          .filter(_.name != activity)
+          .filter(a => a.name != activity || a.project != project)
+          .map(convert)
+          .mkString("\n")
+      }
+      res <- IO[Try[Unit]] {
+        Try(Files.write(Paths.get(file), filtered.getBytes))
+      }
+    } yield res
+  }
+
+  def deleteProject(name: String): IO[Try[Unit]] = {
+    for {
+      result <- readActivities()
+      activities <- result match {
+        case Success(activities) => IO { activities }
+        case Failure(err)        => IO { scribe.error(err.getMessage); Nil }
+      }
+      filtered <- IO {
+        activities
+          .filter(a => a.project != name)
           .map(convert)
           .mkString("\n")
       }
