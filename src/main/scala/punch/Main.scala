@@ -1,9 +1,10 @@
 package punch
 
 import punch.cli.Cli
+import cats.effect.{ExitCode, IOApp, IO}
 
-object Main extends App {
-  override def main(args: Array[String]): Unit = {
-    Cli.interpret(args.to[Vector]).unsafeRunSync()
+object Main extends IOApp {
+  override def run(args: List[String]): IO[ExitCode] = {
+    Cli.interpret(args)
   }
 }

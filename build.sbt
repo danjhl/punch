@@ -10,25 +10,26 @@ lazy val root =
 
 lazy val rootSettings =
   Seq(
-    name             := "punch",
-    version          := "0.1.0-SNAPSHOT",
-    scalaVersion     := "2.12.8",
-    organization     := "io.punch",
-    organizationName := "punch") ++ graalSettings ++ rootDeps
+    name                       := "punch",
+    version                    := "0.1.0-SNAPSHOT",
+    scalaVersion               := "2.12.8",
+    organization               := "io.punch",
+    organizationName           := "punch",
+    graalVMNativeImageOptions ++= graalSettings,
+    libraryDependencies       ++= rootDeps)
 
 lazy val graalSettings =
-  graalVMNativeImageOptions ++= Seq("--allow-incomplete-classpath")
+  Seq("--allow-incomplete-classpath")
 
 // Dependencies
 
 lazy val rootDeps =
-  libraryDependencies ++=
-    Seq(
-      Deps.scalaTest % Test,
-      Deps.scribe,
-      Deps.catsEffect,
-      Deps.jline,
-      Deps.fastparse)
+  Seq(
+    Deps.scalaTest % Test,
+    Deps.scribe,
+    Deps.catsEffect,
+    Deps.jline,
+    Deps.fastparse)
 
 // Tasks
 
