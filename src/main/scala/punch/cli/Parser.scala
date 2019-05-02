@@ -6,6 +6,7 @@ object Parser {
   def parseLine(line: String): Either[ParseError, ReplCommand] = {
     parse(line, Expressions.replCommand(_)) match {
       case Parsed.Success(cmd, _)  => Right(cmd)
+      // TODO use formatted msg
       case Parsed.Failure(_, _, _) => Left(ParseError("fail"))
     }
   }
@@ -57,13 +58,14 @@ private object Expressions {
   type s = String
 
   val toAdd = (c: (s, os, os, (s, os, (s, os)))) => 
-    Add(c._1.toInt,
-        c._2.map(_.toInt),
-        c._3.map(_.toInt),
-        c._4._1.toInt,
-        c._4._2.map(_.toInt),
-        c._4._3._1.toInt,
-        c._4._3._2.map(_.toInt))
+    Add(
+      c._1.toInt,
+      c._2.map(_.toInt),
+      c._3.map(_.toInt),
+      c._4._1.toInt,
+      c._4._2.map(_.toInt),
+      c._4._3._1.toInt,
+      c._4._3._2.map(_.toInt))
 }
 
 case class ParseError(message: String)
@@ -74,13 +76,14 @@ case object Exit extends ReplCommand
 case class Now(activityName: String) extends ReplCommand
 case class Rm(activityName: String) extends ReplCommand
 case class Punch(projectName: String) extends ReplCommand
-case class Add(day: Int,
-               month: Option[Int],
-               year: Option[Int],
-               startHour: Int,
-               startMinute: Option[Int],
-               stopHour: Int,
-               stopMinute: Option[Int]) extends ReplCommand
+case class Add(
+  day: Int,
+  month: Option[Int],
+  year: Option[Int],
+  startHour: Int,
+  startMinute: Option[Int],
+  stopHour: Int,
+  stopMinute: Option[Int]) extends ReplCommand
 
 case class Ls(time: Option[TimePara]) extends ReplCommand
 

@@ -1,9 +1,10 @@
 package punch.cli
 
-import cats.effect.IO
+import punch.cli.DisplayText._
+import scalaz.zio.Task
 
 object Help {
-  def show(): IO[Unit] = IO { println(text) }
+  def show(): Task[Unit] = putStrLn(text)
 
   private val text =
     """

@@ -27,7 +27,7 @@ lazy val rootDeps =
   Seq(
     Deps.scalaTest % Test,
     Deps.scribe,
-    Deps.catsEffect,
+    Deps.zio,
     Deps.jline,
     Deps.fastparse)
 

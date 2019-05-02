@@ -5,7 +5,7 @@ import org.scalatest._
 class CommandsSpec extends FunSpec with Matchers {
   describe("Commands") {
     it("should parse help") {
-      check("help") shouldEqual Right(ShowHelp)
+      check("help") shouldEqual Right(ShowHelp())
     }
 
     it("should parse switch") {
@@ -13,7 +13,7 @@ class CommandsSpec extends FunSpec with Matchers {
     }
 
     it("should return unknown command") {
-      check("nothing", "really") shouldEqual Left(UnknownCommand)
+      check("nothing", "really") shouldEqual Left(UnknownCommand())
     }
   }
 

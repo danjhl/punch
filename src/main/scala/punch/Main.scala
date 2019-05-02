@@ -1,10 +1,14 @@
 package punch
 
 import punch.cli.Cli
-import cats.effect.{ExitCode, IOApp, IO}
+import punch.cli.DisplayText._
+import scalaz.zio.{App, ZIO}
 
-object Main extends IOApp {
-  override def run(args: List[String]): IO[ExitCode] = {
-    Cli.interpret(args)
+object Main extends App {
+  override def run(args: List[String]): ZIO[Environment, Nothing, Int] = {
+    Cli
+      .interpret(args)
+      .catchAll(err => putLogErr(err.getMessage()))
+      .fold(_ => 1, _ => 0)
   }
 }
