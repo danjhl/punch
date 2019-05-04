@@ -10,11 +10,16 @@ object Cli {
 
   def interpret(args: Seq[String]): Task[Unit] = {
     Commands.interpret(args) match {
+      case Right(LsProjects())       => ls()
       case Right(ShowHelp())         => Help.show()
       case Right(Switch(project))    => Repl.start(project)
       case Right(RmProject(project)) => rm(project)
       case Left(UnknownCommand())    => unknown(args)
     }
+  }
+
+  private def ls() = {
+    repo.readProjects().flatMap(projects => putStrLn(projects.mkString("\n")))
   }
 
   private def rm(project: String) = {
