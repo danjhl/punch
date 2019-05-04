@@ -7,7 +7,7 @@ import org.jline.terminal.{TerminalBuilder, Terminal}
 import org.jline.reader.{LineReaderBuilder, LineReader, Candidate}
 import org.jline.reader.impl.completer.StringsCompleter
 import org.jline.reader.UserInterruptException
-import java.time.{LocalDate, Instant, ZoneId}
+import java.time.{LocalDate, Instant, ZoneId, OffsetDateTime}
 
 case class State(
   tracked: Option[(String, Long)],
@@ -66,6 +66,7 @@ object Repl {
         case Now(activity)  => now(activity, state)
         case Stop           => stopWithMessage(state)
         case Exit           => stop(state).map(_ => state.copy(exit = true))
+        case a : Add        => add(a, state)
         case Rm(activity)   => rm(activity, state)
         case Punch(project) => stop(state).map(s => s.copy(project = project))
         case _              => putStrLn("unknown command").map(_ => state)
@@ -124,6 +125,26 @@ object Repl {
     repo
       .deleteActivities(activity, state.project)
       .map(_ => state)
+  }
+
+  def add(add: Add, state: State): Task[State] = {
+    for {
+      zoneId <- IO { ZoneId.systemDefault() }
+      now    <- IO { Instant.now().atZone(zoneId).toLocalDate() }
+      date   <- IO {
+        now
+          .withDayOfMonth(add.day.getOrElse(now.getDayOfMonth()))
+          .withMonth(add.month.getOrElse(now.getMonthValue()))
+          .withYear(add.year.getOrElse(now.getYear()))
+      }
+      fromD  <- IO { date.atTime(add.startHour, add.startMinute.getOrElse(0)) }
+      toD    <- IO { date.atTime(add.stopHour, add.stopMinute.getOrElse(0)) }
+      offset <- IO { OffsetDateTime.now().getOffset() }
+      from   <- IO { fromD.toEpochSecond(offset) }
+      to     <- IO { toD.toEpochSecond(offset) }
+      _      <- repo.writeActivity(
+        Activity(add.activityName, state.project, from, to))
+    } yield state
   }
 
   def onInterrupt(state: State): 
