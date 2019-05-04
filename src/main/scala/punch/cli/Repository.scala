@@ -9,6 +9,7 @@ trait Repository {
   def readActivities(): Task[Seq[Activity]]
   def readActivitiesFor(project: String): Task[Seq[Activity]]
   def deleteActivities(name: String, project: String): Task[Unit]
+  def readProjects(): Task[Seq[String]]
   def deleteProject(name: String): Task[Unit]
 }
 
@@ -88,5 +89,9 @@ object Repo extends Repository {
       IO.effect(Paths.get(file))
         .flatMap(path => IO.effect(Files.write(path, str.getBytes())))
     }
+  }
+
+  def readProjects(): Task[Seq[String]] = {
+    readActivities().map(seq => seq.map(_.project).toSet.toSeq)
   }
 }

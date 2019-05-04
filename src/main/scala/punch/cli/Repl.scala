@@ -36,12 +36,15 @@ object Repl {
 
   def createReader(terminal: Terminal): Task[LineReader] = {
     for {
+      projects   <- repo.readProjects()
       activities <- repo.readActivities()
       reader     <- IO { 
         LineReaderBuilder.builder()
           .completer { (reader, line, candidates) =>
             if (activityCmd(line.line))
               activities.foreach(a => candidates.add(new Candidate(a.name)))
+            if (projectCmd(line.line))
+              projects.foreach(p => candidates.add(new Candidate(p)))
           }
           .terminal(terminal)
           .build()
@@ -50,6 +53,7 @@ object Repl {
   }
 
   def activityCmd(line: String) = line.matches("((now)\\s*?.*)|((rm)\\s*?.*)")
+  def projectCmd(line: String) = line.matches("((punch)\\s*?.*)")
 
   def onInput(
       line: String,
@@ -58,12 +62,13 @@ object Repl {
     Parser.parseLine(line).fold(
       { err => putStrLn(err.message).map(_ => state) },
       {
-        case Ls(para)      => ls(para, state).map(_ => state)
-        case Now(activity) => now(activity, state)
-        case Stop          => stopWithMessage(state)
-        case Exit          => stop(state).map(_ => state.copy(exit = true))
-        case Rm(activity)  => rm(activity, state)
-        case _             => putStrLn("unknown command").map(_ => state)
+        case Ls(para)       => ls(para, state).map(_ => state)
+        case Now(activity)  => now(activity, state)
+        case Stop           => stopWithMessage(state)
+        case Exit           => stop(state).map(_ => state.copy(exit = true))
+        case Rm(activity)   => rm(activity, state)
+        case Punch(project) => stop(state).map(s => s.copy(project = project))
+        case _              => putStrLn("unknown command").map(_ => state)
       })
   }
 
