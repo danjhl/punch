@@ -2,3 +2,4 @@ target/
 /punch
 .bloop/
 .metals/
+*.db

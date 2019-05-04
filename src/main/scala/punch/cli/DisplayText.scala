@@ -3,7 +3,6 @@ package punch.cli
 import scalaz.zio.IO
 
 object DisplayText {
-  def putLogErr(msg: String) = IO { scribe.error(msg) }
   def putStrLn(msg: String) = IO { println(msg) }
 
   def listActivities(activities: Seq[Activity]): String = {

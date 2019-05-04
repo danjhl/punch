@@ -6,8 +6,7 @@ object Parser {
   def parseLine(line: String): Either[ParseError, ReplCommand] = {
     parse(line, Expressions.replCommand(_)) match {
       case Parsed.Success(cmd, _)  => Right(cmd)
-      // TODO use formatted msg
-      case Parsed.Failure(_, _, _) => Left(ParseError("fail"))
+      case Parsed.Failure(_, _, _) => Left(ParseError("invalid command"))
     }
   }
 }
