@@ -16,7 +16,7 @@ ls                                       list projects
 
 Tracking Commands:
 
-help                                     show
+help                                     show help
 now [activity]                           start tracking activity
 punch [project]                          switch to project
 stop                                     stop tracking activity
