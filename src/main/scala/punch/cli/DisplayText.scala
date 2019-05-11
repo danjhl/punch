@@ -19,7 +19,7 @@ object DisplayText {
     list(set.toSeq)
   }
 
-  def time(seconds: Long) = {
+  private def time(seconds: Long) = {
     val hours = seconds / 3600
     val minutes = seconds % 3600 / 60
     f"$hours%2d h $minutes%2d m"
@@ -32,15 +32,15 @@ object DisplayText {
       listNonEmpty(seq)
   }
 
-  def listNonEmpty(seq: Seq[(String, String)]) = {
+  private def listNonEmpty(seq: Seq[(String, String)]) = {
     val leftWidth = seq.map(_._1.length).max
     val rightWidth = seq.map(_._2.length).max
     seq.map(row(_, leftWidth, rightWidth)).mkString("\n")
   }
 
-  def row(r: (String, String), leftWidth: Int, rightWidth: Int) = {
+  private def row(r: (String, String), leftWidth: Int, rightWidth: Int) = {
     val (left, right) = r
-    val end = leftWidth + rightWidth - right.length
+    val end = leftWidth + rightWidth - right.length + 4
     val padding = paddingDotted(left.length, end)
     s"${left}${padding}${right}"
   }

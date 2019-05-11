@@ -8,27 +8,38 @@ object Help {
 
   private val text =
     """
-       |Usage: punch [command]
+       |Usage: punch [command or project]
        |
        |Commands:
        |
-       |[project]....................................... start tracking time
-       |rm [project].................................... remove project
-       |ls.............................................. list projects
+       |help                                     show help
+       |[project]                                start tracking in project
+       |rm [project]                             remove project
+       |ls                                       list projects
        |
-       |Project Commands:
+       |Tracking Commands:
        |
-       |now [activity].................................. start tracking activity
-       |stop............................................ stop tracking activity
-       |exit............................................ leave project
-       |ls.............................................. list activities
-       |rm [activity]................................... remove activity
+       |help                                     show
+       |now [activity]                           start tracking activity
+       |punch [project]                          switch to project
+       |stop                                     stop tracking activity
+       |exit                                     leave project
        |
-       |add activity [d[.m][.y]] h[:mm]-h[:mm].......... add activity manually
+       |ls                                       list activities
+       |    ls -d                                list activities today
+       |    ls -w                                list activities this week
        |
-       |    example: add x 10-11              adds activity today 10:00 to 11:00
-       |             add x 10 10:30-11:30     adds activity at 10 of current month
-       |             add x 1.10.1999 10-11    adds activity on specified date
+       |sum                                      show summary today
+       |    sum -d[n]                            show summary today + n     
+       |    sum -w[n]                            show summary this week + n
+       |
+       |rm [activity]                            remove activity
+       |
+       |add [activity] [d[.m][.y]] h[:mm]-h[:mm] add activity manually
+       |
+       |    add x 10-11                          adds activity x today 10:00 to 11:00
+       |    add x 10 10:30-11:30                 adds activity x at 10th day of current month
+       |    add x 10.1.1999 10-11                adds activity x on specified date
        |
        |use <TAB> to autocomplete activity and project names
     """.stripMargin

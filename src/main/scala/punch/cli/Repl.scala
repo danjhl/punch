@@ -8,6 +8,7 @@ import org.jline.reader.{LineReaderBuilder, LineReader, Candidate}
 import org.jline.reader.impl.completer.StringsCompleter
 import org.jline.reader.UserInterruptException
 import java.time.{LocalDate, Instant, ZoneId, OffsetDateTime}
+import java.{util => ju}
 
 case class State(
   tracked: Option[(String, Long)],
@@ -15,8 +16,8 @@ case class State(
   exit: Boolean = false)
 
 object Repl {
-  val repo = Repo
-  val prompt = s"${Console.BLUE}punch> "
+  private val repo = Repo
+  private val prompt = s"${Console.BLUE}punch> "
 
   def start(project: String): Task[Unit] = {
     for {
@@ -25,16 +26,17 @@ object Repl {
     } yield ()
   }
 
-  def loop(initial: State, terminal: Terminal): Task[Unit] = {
+  private def loop(initial: State, terminal: Terminal): Task[Unit] = {
     for {
       reader <- createReader(terminal)
       line   <- IO { reader.readLine(prompt) }.catchSome(onInterrupt(initial))
       state  <- onInput(line, initial)
-      _      <- if (state.exit) IO.effect() else loop(state, terminal)
+      _      <- if (state.exit) IO { terminal.close() }
+                else loop(state, terminal)
     } yield ()
   }
 
-  def createReader(terminal: Terminal): Task[LineReader] = {
+  private def createReader(terminal: Terminal): Task[LineReader] = {
     for {
       projects   <- repo.readProjects()
       activities <- repo.readActivities()
@@ -52,20 +54,25 @@ object Repl {
     } yield reader
   }
 
-  def activityCmd(line: String) = line.matches("((now)\\s*?.*)|((rm)\\s*?.*)")
-  def projectCmd(line: String) = line.matches("((punch)\\s*?.*)")
+  private def activityCmd(line: String) =
+    line.matches("((now)\\s*?.*)|((rm)\\s*?.*)|((add)\\s*?.*)")
+    
+  private def projectCmd(line: String) = 
+    line.matches("((punch)\\s*?.*)")
 
-  def onInput(
+  private def onInput(
       line: String,
       state: State): Task[State] = {
 
     Parser.parseLine(line).fold(
       { err => putStrLn(err.message).map(_ => state) },
       {
+        case ReplHelp()     => Help.show().map(_ => state)
         case Ls(para)       => ls(para, state).map(_ => state)
         case Now(activity)  => now(activity, state)
-        case Stop           => stopWithMessage(state)
-        case Exit           => stop(state).map(_ => state.copy(exit = true))
+        case Stop()         => stopWithMessage(state)
+        case Exit()         => stop(state).map(_ => state.copy(exit = true))
+        case Sum(param)     => summary(param).map(_ => state)
         case a : Add        => add(a, state)
         case Rm(activity)   => rm(activity, state)
         case Punch(project) => stop(state).map(s => s.copy(project = project))
@@ -74,9 +81,9 @@ object Repl {
   }
 
   private def ls(para: Option[TimePara], state: State) = para match {
-    case None       => repo.readActivitiesFor(state.project).flatMap(printAct)
-    case Some(Day)  => lsWith(Activity.onDay _, state.project)
-    case Some(Week) => lsWith(Activity.inWeek _, state.project)
+    case None         => repo.readActivitiesFor(state.project).flatMap(printAct)
+    case Some(Day())  => lsWith(Activity.onDay _, state.project)
+    case Some(Week()) => lsWith(Activity.inWeek _, state.project)
   }
 
   private def lsWith(
@@ -94,10 +101,10 @@ object Repl {
   }
 
   private def printAct(seq: Seq[Activity]) = {
-    putStrLn("activities: \n\n" + DisplayText.listSums(seq) + "\n")
+    putStrLn("\nactivities: \n\n" + DisplayText.listSums(seq) + "\n")
   }
 
-  def now(activity: String, state: State) = {
+  private def now(activity: String, state: State) = {
     for {
       _      <- stop(state)
       _      <- putStrLn(s"tracking ${state.project}/${activity}")
@@ -105,7 +112,7 @@ object Repl {
     } yield state.copy(tracked = Some((activity, time.getEpochSecond())))
   }
 
-  def stop(state: State): Task[State] = {
+  private def stop(state: State): Task[State] = {
     state.tracked.map { case (a, time) =>
       for {
         end <- IO { Instant.now() }
@@ -116,18 +123,18 @@ object Repl {
     .getOrElse(IO.succeed(state))
   }
 
-  def stopWithMessage(state: State): Task[State] = state.tracked match {
+  private def stopWithMessage(state: State): Task[State] = state.tracked match {
     case None => stop(state).flatMap(s => putStrLn("not tracking").map(_ => s))
     case _    => stop(state)
   }
 
-  def rm(activity: String, state: State): Task[State] = {
+  private def rm(activity: String, state: State): Task[State] = {
     repo
       .deleteActivities(activity, state.project)
       .map(_ => state)
   }
 
-  def add(add: Add, state: State): Task[State] = {
+  private def add(add: Add, state: State): Task[State] = {
     for {
       zoneId <- IO { ZoneId.systemDefault() }
       now    <- IO { Instant.now().atZone(zoneId).toLocalDate() }
@@ -147,7 +154,25 @@ object Repl {
     } yield state
   }
 
-  def onInterrupt(state: State): 
+  private def summary(param: Option[SumTimePara]): Task[Unit] = {
+    val off = param match {
+      case None => 0
+      case Some(SumDay(x)) => x
+      case Some(SumWeek(x)) => x * 7
+    }
+
+    for {
+      zoneId <- IO { ZoneId.systemDefault() }
+      date <- IO { LocalDate.now().plusDays(off) }
+      _ <- param match {
+        case None => Summary.showSummary(date, zoneId)
+        case Some(SumDay(_)) => Summary.showSummary(date, zoneId)
+        case Some(SumWeek(_)) => Summary.showWeekSummary(date)
+      }
+    } yield()
+  }
+
+  private def onInterrupt(state: State): 
       PartialFunction[Throwable, ZIO[Any, Throwable, String]] = { 
 
     case _ : UserInterruptException => 

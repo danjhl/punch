@@ -1,5 +1,8 @@
 package punch.cli
 
+import java.time.LocalDate
+import java.time.ZoneId
+
 case class Activity(
     name: String,
     project: String,
@@ -10,16 +13,8 @@ case class Activity(
 }
 
 object Activity {
-  def inWeek(
-      seconds: Long, 
-      day: java.time.LocalDate, 
-      zoneId: java.time.ZoneId): Boolean = {
-    
-    val date = java.time.Instant
-      .ofEpochSecond(seconds)
-      .atZone(zoneId)
-      .toLocalDate()
-    
+  def inWeek(seconds: Long, day: LocalDate, zoneId: ZoneId): Boolean = {
+    val date = toDate(seconds, zoneId)
     val dayOfWeek = day.getDayOfWeek.getValue
     val lastDay = day.plusDays(8 - dayOfWeek)
     val firstDay = day.minusDays(dayOfWeek)
@@ -27,16 +22,15 @@ object Activity {
     date.isAfter(firstDay) && date.isBefore(lastDay)
   }
 
-  def onDay(
-      seconds: Long, 
-      day: java.time.LocalDate, 
-      zoneId: java.time.ZoneId): Boolean = {
-    
-    val date = java.time.Instant
+  def onDay(seconds: Long, day: LocalDate, zoneId: ZoneId): Boolean = {
+    val date = toDate(seconds, zoneId)
+    date.compareTo(day) == 0
+  }
+
+  def toDate(seconds: Long, zoneId: ZoneId): LocalDate = {
+    java.time.Instant
       .ofEpochSecond(seconds)
       .atZone(zoneId)
       .toLocalDate()
-
-    date.compareTo(day) == 0
   }
 }

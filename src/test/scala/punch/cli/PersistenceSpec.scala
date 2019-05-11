@@ -17,8 +17,8 @@ class PersistenceSpec extends FunSpec with Matchers {
           |{"name": "a2", "project": "p", "from": 1, "to": 2, "seconds": 1}"""
             .stripMargin
       
-      Repo.parse(str) shouldEqual Seq(Right(Activity("a", "p", 1, 2)),
-                                             Right(Activity("a2", "p", 1, 2)))
+      Repo.parse(str) shouldEqual 
+        Seq(Right(Activity("a", "p", 1, 2)), Right(Activity("a2", "p", 1, 2)))
     }
 
     it("should return single left") {
@@ -33,8 +33,8 @@ class PersistenceSpec extends FunSpec with Matchers {
           |{"name": "a2", "project": "p", "from": 1, "to": 2, seconds": 1}"""
             .stripMargin
       
-      Repo.parse(str) shouldEqual Seq(Right(Activity("a", "p", 1, 2)),
-                                             Left("couldn't parse line: 1"))
+      Repo.parse(str) shouldEqual
+        Seq(Right(Activity("a", "p", 1, 2)), Left("couldn't parse line: 1"))
     }
   }
 

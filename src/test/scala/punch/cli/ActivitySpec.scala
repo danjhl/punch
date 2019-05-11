@@ -14,8 +14,10 @@ class ActivitySpec extends FunSpec with Matchers {
   describe("Activity#inWeek") {
     val check = (day: Int, weekDay: Int) => {
       val weekDayDate = LocalDate.of(2019, Month.APRIL, weekDay);
-      val dayDate = LocalDate.of(2019, Month.APRIL, day)
-        .toEpochSecond(LocalTime.MIN, ZoneOffset.MIN)
+      val dayDate =
+        LocalDate
+          .of(2019, Month.APRIL, day)
+          .toEpochSecond(LocalTime.MIN, ZoneOffset.MIN)
 
       Activity.inWeek(dayDate, weekDayDate, ZoneId.of("UTC"))
     }
@@ -41,8 +43,10 @@ class ActivitySpec extends FunSpec with Matchers {
   describe("Activity#onDay") {
     val check = (day: Int, weekDay: Int) => {
       val today = LocalDate.of(2019, Month.APRIL, weekDay);
-      val date = LocalDate.of(2019, Month.APRIL, day)
-        .toEpochSecond(LocalTime.MIN, ZoneOffset.MIN)
+      val date =
+        LocalDate
+          .of(2019, Month.APRIL, day)
+          .toEpochSecond(LocalTime.MIN, ZoneOffset.MIN)
 
       Activity.onDay(date, today, ZoneId.of("UTC"))
     }

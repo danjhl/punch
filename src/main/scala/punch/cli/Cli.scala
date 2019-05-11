@@ -9,7 +9,7 @@ object Cli {
   val repo = Repo
 
   def interpret(args: Seq[String]): Task[Unit] = {
-    Commands.interpret(args) match {
+    CliCommands.interpret(args) match {
       case Right(LsProjects())       => ls()
       case Right(ShowHelp())         => Help.show()
       case Right(Switch(project))    => Repl.start(project)

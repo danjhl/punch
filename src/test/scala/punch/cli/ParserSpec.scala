@@ -6,10 +6,14 @@ class ParserSpec extends FunSpec with Matchers {
   describe("Parser#parseLine") {
     val check = Parser.parseLine(_)
 
+    it("should parse help") {
+      check("help") shouldEqual Right(ReplHelp())
+    }
+
     it("should parse ls") {
       check("ls") shouldEqual Right(Ls(None))
-      check("ls -w") shouldEqual Right(Ls(Some(Week)))
-      check("ls -d") shouldEqual Right(Ls(Some(Day)))
+      check("ls -w") shouldEqual Right(Ls(Some(Week())))
+      check("ls -d") shouldEqual Right(Ls(Some(Day())))
     }
 
     it("should parse now") {
@@ -19,11 +23,11 @@ class ParserSpec extends FunSpec with Matchers {
     }
 
     it("should parse stop") {
-      check("stop") shouldEqual Right(Stop)
+      check("stop") shouldEqual Right(Stop())
     }
 
     it("should parse exit") {
-      check("exit") shouldEqual Right(Exit)
+      check("exit") shouldEqual Right(Exit())
     }
 
     it("should parse rm") {
@@ -42,11 +46,20 @@ class ParserSpec extends FunSpec with Matchers {
       val n = None
       val s = (x: Int) => Some(x)
 
-      check("add a 1-1") shouldEqual Right(Add("a", n, n, n, 1, n, 1, n))
-      check("add a 10 1-1") shouldEqual Right(Add("a", s(10), n, n, 1, n, 1, n))
-      check("add a 1 10-10") shouldEqual Right(Add("a", s(1), n, n, 10, n, 10, n))
-      check("add a 1 5:01-5:10") shouldEqual Right(Add("a", s(1), n, n, 5, s(1), 5, s(10)))
-      check("add a 1 24:00-5:10") shouldEqual Right(Add("a", s(1), n, n, 24, s(0), 5, s(10)))
+      check("add a 1-1") shouldEqual 
+        Right(Add("a", n, n, n, 1, n, 1, n))
+
+      check("add a 10 1-1") shouldEqual 
+        Right(Add("a", s(10), n, n, 1, n, 1, n))
+
+      check("add a 1 10-10") shouldEqual 
+        Right(Add("a", s(1), n, n, 10, n, 10, n))
+
+      check("add a 1 5:01-5:10") shouldEqual
+        Right(Add("a", s(1), n, n, 5, s(1), 5, s(10)))
+        
+      check("add a 1 24:00-5:10") shouldEqual
+        Right(Add("a", s(1), n, n, 24, s(0), 5, s(10)))
 
       check("add a 1 0-1").isLeft shouldEqual true
       check("add a 1 25-1").isLeft shouldEqual true
@@ -57,6 +70,16 @@ class ParserSpec extends FunSpec with Matchers {
       check("add a 0 5:10-5:10").isLeft shouldEqual true
       check("add a 32 5:10-5:10").isLeft shouldEqual true
       check("add a 200 5:10-5:10").isLeft shouldEqual true
+    }
+
+    it("should parse sum") {
+      check("sum") shouldEqual Right(Sum(None))
+      check("sum -d") shouldEqual Right(Sum(Some(SumDay(0))))
+      check("sum -d2") shouldEqual Right(Sum(Some(SumDay(2))))
+      check("sum -d-2") shouldEqual Right(Sum(Some(SumDay(-2))))
+      check("sum -w") shouldEqual Right(Sum(Some(SumWeek(0))))
+      check("sum -w2") shouldEqual Right(Sum(Some(SumWeek(2))))
+      check("sum -w-2") shouldEqual Right(Sum(Some(SumWeek(-2))))
     }
   }
 }

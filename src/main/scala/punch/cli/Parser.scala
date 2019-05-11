@@ -13,26 +13,35 @@ object Parser {
 
 private object Expressions {
   def replCommand[_ : P]: P[ReplCommand] = P(
-    ls
+    help
+    | ls
     | now
     | rm
     | add
+    | sum
     | punch
     | stop
     | exit
   )
 
+  def help[_ : P]     = P("help").map(_ => ReplHelp())
   def ls[_ : P]       = P("ls" ~/ (ws ~ timeP).?).map(c => Ls(c))
-  def stop[_ : P]     = P("stop").!.map(c => Stop)
-  def exit[_ : P]     = P("exit").!.map(c => Exit)
+  def stop[_ : P]     = P("stop").!.map(c => Stop())
+  def exit[_ : P]     = P("exit").!.map(c => Exit())
   def now[_ : P]      = P("now" ~/ ws ~ (escaped | str)).map(c => Now(c))
   def rm[_ : P]       = P("rm" ~/ ws ~ (escaped | str)).map(c => Rm(c))
   def punch[_ : P]    = P("punch" ~/ ws ~ (escaped | str)).map(c => Punch(c))
-  def add[_ : P]      = P("add" ~/ ws ~ str ~ ws ~ (date ~ ws).? ~ frame).map(toAdd)
+  def sum[_ : P]      = P("sum" ~/ (ws ~ sumTimeP).? ).map(c => Sum(c))
+  def add[_ : P]      = P("add" ~/ ws ~ str ~ ws ~ (date ~ ws).? ~ frame)
+                          .map(toAdd)
 
   def timeP[_ : P]    = P(weekP | dayP)
-  def weekP[_ : P]    = P("-w").!.map(c => Week)
-  def dayP[_ : P]     = P("-d").!.map(c => Day)
+  def weekP[_ : P]    = P("-w").!.map(c => Week())
+  def dayP[_ : P]     = P("-d").!.map(c => Day())
+
+  def sumTimeP[_ : P] = P(sumWeekP | sumDayP)
+  def sumWeekP[_ : P] = P("-w" ~ ("-".? ~ digit).!.?).map(toSumWeek)
+  def sumDayP[_ : P]  = P("-d" ~ ("-".? ~ digit).!.?).map(toSumDay)
 
   def str[_ : P]      = P(CharsWhile(_ != ' ')).!
   def ws[_ : P]       = P(CharsWhile(_ == ' '))
@@ -57,6 +66,8 @@ private object Expressions {
   type os = Option[String]
   type s = String
 
+  val toSumDay = (c: os) => SumDay(c.getOrElse("0").toInt)
+  val toSumWeek = (c: os) => SumWeek(c.getOrElse("0").toInt)
   val toAdd = (c: (s, Option[(s, os, os)], (s, os, (s, os)))) => 
     Add(
       c._1,
@@ -72,11 +83,14 @@ private object Expressions {
 case class ParseError(message: String)
 
 sealed trait ReplCommand
-case object Stop extends ReplCommand
-case object Exit extends ReplCommand
+
+case class ReplHelp() extends ReplCommand
+case class Stop() extends ReplCommand
+case class Exit() extends ReplCommand
 case class Now(activityName: String) extends ReplCommand
 case class Rm(activityName: String) extends ReplCommand
 case class Punch(projectName: String) extends ReplCommand
+case class Ls(time: Option[TimePara]) extends ReplCommand
 case class Add(
   activityName: String,
   day: Option[Int],
@@ -87,8 +101,14 @@ case class Add(
   stopHour: Int,
   stopMinute: Option[Int]) extends ReplCommand
 
-case class Ls(time: Option[TimePara]) extends ReplCommand
-
 sealed trait TimePara
-case object Day extends TimePara
-case object Week extends TimePara
+
+case class Day() extends TimePara
+case class Week() extends TimePara
+
+case class Sum(time: Option[SumTimePara]) extends ReplCommand
+
+sealed trait SumTimePara
+
+case class SumDay(off: Int) extends SumTimePara
+case class SumWeek(off: Int) extends SumTimePara
