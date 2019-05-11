@@ -2,7 +2,7 @@ package punch.cli
 
 import scalaz.zio.{IO, Task}
 import scala.util.{Try, Success, Failure}
-import java.nio.file.{Files, Paths, StandardOpenOption}
+import java.nio.file.{Files, Paths, StandardOpenOption, LinkOption, Path}
 
 trait Repository {
   def writeActivity(activity: Activity): Task[Unit]
@@ -14,7 +14,7 @@ trait Repository {
 }
 
 object Repo extends Repository {
-  private val file = "act.db"
+  private val file = "punch.store"
   private val activityPattern = 
     ("""\{\s*"name"\s*:\s*"(.*?)"\s*,\s*""" +
     """"project"\s*:\s*"(.*?)"\s*,\s*""" +
@@ -23,11 +23,14 @@ object Repo extends Repository {
     """"seconds"\s*:\s*(\d*)\}""").r
 
   def writeActivity(activity: Activity): Task[Unit] = {
-    val bytes = ("\n" + convert(activity)).getBytes()
+    val bytes = (convert(activity) + "\n").getBytes()
     val option = StandardOpenOption.APPEND
 
-    IO.effect(Paths.get(file))
-      .flatMap(path => IO.effect(Files.write(path, bytes, option)))
+    for {
+      path <- IO { Paths.get(file) }
+      _    <- createFileIfNotExists(path)
+      _    <- IO { Files.write(path, bytes, option) }
+    } yield ()
   }
 
   def convert(activity: Activity): String = {
@@ -39,6 +42,7 @@ object Repo extends Repository {
   def readActivities(): Task[Seq[Activity]] = {
     for {
       path   <- IO { Paths.get(file) }
+      _      <- createFileIfNotExists(path)
       bytes  <- IO { Files.readAllBytes(path) }
       result <- {
         val seq = parse(new String(bytes))
@@ -86,12 +90,22 @@ object Repo extends Repository {
         .mkString("\n")
     }
     .flatMap { str =>
-      IO.effect(Paths.get(file))
-        .flatMap(path => IO.effect(Files.write(path, str.getBytes())))
+      for {
+        path <- IO { Paths.get(file) }
+        _    <- createFileIfNotExists(path)
+        _    <- IO { Files.write(path, str.getBytes()) }
+      } yield ()
     }
   }
 
   def readProjects(): Task[Seq[String]] = {
     readActivities().map(seq => seq.map(_.project).toSet.toSeq)
+  }
+
+  private def createFileIfNotExists(path: Path): Task[Unit] = {
+    for {
+      exists <- IO { Files.exists(path, LinkOption.NOFOLLOW_LINKS) }
+      _      <- if (!exists) IO { Files.createFile(path) } else IO.succeed()
+    } yield ()
   }
 }

@@ -23,7 +23,7 @@ object Summary {
 
   private def printSummary(date: LocalDate, text: String): Task[Unit] = {
     for {
-      _ <- putStrLn(s"\n${date.getDayOfWeek.toString} - ${date.toString}\n")
+      _ <- putStrLn(s"\n${date.getDayOfWeek.toString} - ${date.toString}")
       _ <- putStrLn("──────────────────────\n")
       _ <- putStrLn(s"${text}\n")
     } yield ()
@@ -36,7 +36,7 @@ object Summary {
     for {
       zoneId <- IO { ZoneId.systemDefault() }
       fn     <- IO { summaryFn(start, zoneId) }
-      _      <- (0 to 5).map(fn).reduce((p, n) => p.flatMap(_ => n))
+      _      <- (0 to 6).map(fn).reduce((p, n) => p.flatMap(_ => n))
     } yield()
   }
 
