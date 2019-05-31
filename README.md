@@ -27,8 +27,8 @@ ls                                       list activities
     ls -w                                list activities this week
 
 sum                                      show summary today
-    sum -d[n]                            show summary today + n     
-    sum -w[n]                            show summary this week + n
+    sum -d[n]                            show summary today - n days  
+    sum -w[n]                            show summary this week - n weeks
 
 rm [activity]                            remove activity
 

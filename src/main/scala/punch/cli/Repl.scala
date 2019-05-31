@@ -163,7 +163,7 @@ object Repl {
 
     for {
       zoneId <- IO { ZoneId.systemDefault() }
-      date <- IO { LocalDate.now().plusDays(off) }
+      date <- IO { LocalDate.now().minusDays(off) }
       _ <- param match {
         case None => Summary.showSummary(date, zoneId)
         case Some(SumDay(_)) => Summary.showSummary(date, zoneId)
