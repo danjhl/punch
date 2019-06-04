@@ -14,7 +14,10 @@ trait Repository {
 }
 
 object Repo extends Repository {
+
+  private val dir = ".punch"
   private val file = "punch.store"
+
   private val activityPattern = 
     ("""\{\s*"name"\s*:\s*"(.*?)"\s*,\s*""" +
     """"project"\s*:\s*"(.*?)"\s*,\s*""" +
@@ -27,7 +30,7 @@ object Repo extends Repository {
     val option = StandardOpenOption.APPEND
 
     for {
-      path <- IO { Paths.get(file) }
+      path <- getPath()
       _    <- createFileIfNotExists(path)
       _    <- IO { Files.write(path, bytes, option) }
     } yield ()
@@ -41,7 +44,7 @@ object Repo extends Repository {
 
   def readActivities(): Task[Seq[Activity]] = {
     for {
-      path   <- IO { Paths.get(file) }
+      path   <- getPath()
       _      <- createFileIfNotExists(path)
       bytes  <- IO { Files.readAllBytes(path) }
       result <- {
@@ -52,6 +55,13 @@ object Repo extends Repository {
         else               IO.fail(new Exception(lefts.mkString("\n")))
       }
     } yield result
+  }
+
+  def getPath(): Task[Path] = {
+    for {
+      home <- IO { System.getProperty("user.home") }
+      path <- IO { Paths.get(home, dir, file) }
+    } yield path
   }
 
   def readActivitiesFor(project: String): Task[Seq[Activity]] = {
@@ -91,7 +101,7 @@ object Repo extends Repository {
     }
     .flatMap { str =>
       for {
-        path <- IO { Paths.get(file) }
+        path <- getPath()
         _    <- createFileIfNotExists(path)
         _    <- IO { Files.write(path, str.getBytes()) }
       } yield ()
@@ -105,7 +115,12 @@ object Repo extends Repository {
   private def createFileIfNotExists(path: Path): Task[Unit] = {
     for {
       exists <- IO { Files.exists(path, LinkOption.NOFOLLOW_LINKS) }
-      _      <- if (!exists) IO { Files.createFile(path) } else IO.succeed()
+      _      <- if (!exists) createFileAndDirectories(path) else IO.succeed()
     } yield ()
+  }
+
+  private def createFileAndDirectories(path: Path): Task[Unit] = {
+    IO.effect(Files.createDirectories(path.getParent()))
+      .flatMap(_ => IO.effect(Files.createFile(path)))
   }
 }

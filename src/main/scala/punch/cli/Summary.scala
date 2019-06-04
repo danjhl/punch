@@ -14,18 +14,20 @@ object Summary {
   def showSummary(date: LocalDate, zoneId: ZoneId): Task[Unit] = {
     repo
       .readActivities()
-      .map { seq => 
+      .map { seq =>
         seq.filter(x => Activity.toDate(x.from, zoneId).compareTo(date) == 0)
       }
-      .map(DisplayText.listSums)
-      .flatMap(text => printSummary(date, text))
+      .flatMap { seq =>
+        if (seq.isEmpty) printSummary(date, "")
+        else             printSummary(date, DisplayText.listSums(seq))
+      }
   }
 
   private def printSummary(date: LocalDate, text: String): Task[Unit] = {
     for {
       _ <- putStrLn(s"\n${date.getDayOfWeek.toString} - ${date.toString}")
-      _ <- putStrLn("──────────────────────\n")
-      _ <- putStrLn(s"${text}\n")
+      _ <- putStrLn("──────────────────────")
+      _ <- putStrLn(s"${text}")
     } yield ()
   }
 
