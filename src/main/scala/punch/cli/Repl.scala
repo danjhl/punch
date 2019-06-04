@@ -8,7 +8,7 @@ import org.jline.reader.{LineReaderBuilder, LineReader, Candidate}
 import org.jline.reader.impl.completer.StringsCompleter
 import org.jline.reader.UserInterruptException
 import java.time.{LocalDate, Instant, ZoneId, OffsetDateTime}
-import java.{util => ju}
+
 
 case class State(
   tracked: Option[(String, Long)],
@@ -140,9 +140,9 @@ object Repl {
       now    <- IO { Instant.now().atZone(zoneId).toLocalDate() }
       date   <- IO {
         now
-          .withDayOfMonth(add.day.getOrElse(now.getDayOfMonth()))
-          .withMonth(add.month.getOrElse(now.getMonthValue()))
           .withYear(add.year.getOrElse(now.getYear()))
+          .withMonth(add.month.getOrElse(now.getMonthValue()))
+          .withDayOfMonth(add.day.getOrElse(now.getDayOfMonth()))
       }
       fromD  <- IO { date.atTime(add.startHour, add.startMinute.getOrElse(0)) }
       toD    <- IO { date.atTime(add.stopHour, add.stopMinute.getOrElse(0)) }
@@ -160,7 +160,7 @@ object Repl {
       case Some(SumDay(x)) => x
       case Some(SumWeek(x)) => x * 7
     }
-
+    
     for {
       zoneId <- IO { ZoneId.systemDefault() }
       date <- IO { LocalDate.now().minusDays(off) }

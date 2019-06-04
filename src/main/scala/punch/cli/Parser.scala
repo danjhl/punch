@@ -40,8 +40,8 @@ private object Expressions {
   def dayP[_ : P]     = P("-d").!.map(c => Day())
 
   def sumTimeP[_ : P] = P(sumWeekP | sumDayP)
-  def sumWeekP[_ : P] = P("-w" ~ ("-".? ~ digit).!.?).map(toSumWeek)
-  def sumDayP[_ : P]  = P("-d" ~ ("-".? ~ digit).!.?).map(toSumDay)
+  def sumWeekP[_ : P] = P("-w" ~ ("-".? ~ digit ~ digit0.rep).!.?).map(toSumWeek)
+  def sumDayP[_ : P]  = P("-d" ~ ("-".? ~ digit ~ digit0.rep).!.?).map(toSumDay)
 
   def str[_ : P]      = P(CharsWhile(_ != ' ')).!
   def ws[_ : P]       = P(CharsWhile(_ == ' '))
@@ -52,7 +52,7 @@ private object Expressions {
   def date[_ : P]     = P(day.! ~ ("." ~/ month.!).? ~ ("." ~/ year.!).?)
   def day[_ : P]      = P(("1" | "2") ~ digit0 | "30" | "31" | digit)
   def month[_ : P]    = P("11" | "12" | digit)
-  def year[_ : P]     = P(digit.rep)
+  def year[_ : P]     = P(digit ~ digit0.rep)
 
   def frame[_ : P]    = P(time ~ "-" ~/ time)
   def time[_ : P]     = P(hour.! ~/ (":" ~/ minutes.!).?)

@@ -61,6 +61,12 @@ class ParserSpec extends FunSpec with Matchers {
       check("add a 1 24:00-5:10") shouldEqual
         Right(Add("a", s(1), n, n, 24, s(0), 5, s(10)))
 
+      check("add a 1.1.1999 24:00-5:10") shouldEqual
+        Right(Add("a", s(1), s(1), s(1999), 24, s(0), 5, s(10)))
+
+      check("add a 1.1.2019 24:00-5:10") shouldEqual
+        Right(Add("a", s(1), s(1), s(2019), 24, s(0), 5, s(10)))
+
       check("add a 1 0-1").isLeft shouldEqual true
       check("add a 1 25-1").isLeft shouldEqual true
       check("add a 1 5:1-5:1").isLeft shouldEqual true
@@ -70,6 +76,7 @@ class ParserSpec extends FunSpec with Matchers {
       check("add a 0 5:10-5:10").isLeft shouldEqual true
       check("add a 32 5:10-5:10").isLeft shouldEqual true
       check("add a 200 5:10-5:10").isLeft shouldEqual true
+      check("add a 1.1.0001 5:10-5:10").isLeft shouldEqual true
     }
 
     it("should parse sum") {
@@ -77,9 +84,11 @@ class ParserSpec extends FunSpec with Matchers {
       check("sum -d") shouldEqual Right(Sum(Some(SumDay(0))))
       check("sum -d2") shouldEqual Right(Sum(Some(SumDay(2))))
       check("sum -d-2") shouldEqual Right(Sum(Some(SumDay(-2))))
+      check("sum -d10") shouldEqual Right(Sum(Some(SumDay(10))))
       check("sum -w") shouldEqual Right(Sum(Some(SumWeek(0))))
       check("sum -w2") shouldEqual Right(Sum(Some(SumWeek(2))))
       check("sum -w-2") shouldEqual Right(Sum(Some(SumWeek(-2))))
+      check("sum -w10") shouldEqual Right(Sum(Some(SumWeek(10))))
     }
   }
 }
