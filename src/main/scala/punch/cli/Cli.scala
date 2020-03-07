@@ -27,7 +27,7 @@ object Cli {
   }
 
   private def unknown(args: Seq[String]) = args match {
-    case head :: _ => putStrLn(s"unknown command $head")
-    case Nil       => IO { scribe.error(s"no command parsed for $args") }
+    case head :: _ => putStrLn(s"unknown command '$head'")
+    case Nil       => IO { scribe.error(s"no command parsed for '$args'") }
   }
 }

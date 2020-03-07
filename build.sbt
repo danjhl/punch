@@ -15,6 +15,8 @@ lazy val rootSettings =
     scalaVersion               := "2.12.8",
     organization               := "io.punch",
     organizationName           := "punch",
+    mainClass in assembly      := Some("punch.Main"),
+    test in assembly           := {},
     graalVMNativeImageOptions ++= graalSettings,
     libraryDependencies       ++= rootDeps)
 
@@ -29,6 +31,8 @@ lazy val rootDeps =
     Deps.scribe,
     Deps.zio,
     Deps.jline,
+    Deps.jlineJansi,
+    Deps.jansi,
     Deps.fastparse)
 
 // Tasks
