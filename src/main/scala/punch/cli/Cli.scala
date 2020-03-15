@@ -1,20 +1,22 @@
 package punch.cli
 
-import punch.cli.DisplayText._
+import punch.io.ConsoleImpl.putStrLn
+import punch.io.RepositoryImpl
+import punch.repl.Repl
 import scalaz.zio.{IO, Task}
 import scala.util.Failure
 import scala.util.Success
 
 object Cli {
-  val repo = Repo
+  val repo = RepositoryImpl
 
   def interpret(args: Seq[String]): Task[Unit] = {
-    CliCommands.interpret(args) match {
+    CliParser.parse(args) match {
       case Right(LsProjects())       => ls()
       case Right(ShowHelp())         => Help.show()
       case Right(Switch(project))    => Repl.start(project)
       case Right(RmProject(project)) => rm(project)
-      case Left(UnknownCommand())    => unknown(args)
+      case Left(UnknownCliCommand()) => unknown(args)
     }
   }
 

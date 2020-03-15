@@ -1,6 +1,6 @@
 package punch.cli
 
-import punch.cli.DisplayText._
+import punch.io.ConsoleImpl._
 import scalaz.zio.Task
 
 object Help {

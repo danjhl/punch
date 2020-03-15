@@ -1,14 +1,15 @@
-package punch.cli
+package punch.io
 
+import punch.model.Activity
 import org.scalatest._
 
-class PersistenceSpec extends FunSpec with Matchers {
-  describe("Persistence#parse") {
+class RepositorySpec extends FunSpec with Matchers {
+  describe("Repository#parse") {
     it("should parse single line") {
       val str = 
         """{"name": "a", "project": "p", "from": 1, "to": 2, "seconds": 1}"""
       
-      Repo.parse(str) shouldEqual Seq(Right(Activity("a", "p", 1, 2)))
+      RepositoryImpl.parse(str) shouldEqual Seq(Right(Activity("a", "p", 1, 2)))
     }
 
     it("should parse multiple lines") {
@@ -17,14 +18,14 @@ class PersistenceSpec extends FunSpec with Matchers {
           |{"name": "a2", "project": "p", "from": 1, "to": 2, "seconds": 1}"""
             .stripMargin
       
-      Repo.parse(str) shouldEqual 
+      RepositoryImpl.parse(str) shouldEqual 
         Seq(Right(Activity("a", "p", 1, 2)), Right(Activity("a2", "p", 1, 2)))
     }
 
     it("should return single left") {
       val str = """{"name": "a", "project": "p", """
       
-      Repo.parse(str) shouldEqual Seq(Left("couldn't parse line: 0"))
+      RepositoryImpl.parse(str) shouldEqual Seq(Left("couldn't parse line: 0"))
     }
 
     it("should return left") {
@@ -33,15 +34,15 @@ class PersistenceSpec extends FunSpec with Matchers {
           |{"name": "a2", "project": "p", "from": 1, "to": 2, seconds": 1}"""
             .stripMargin
       
-      Repo.parse(str) shouldEqual
+      RepositoryImpl.parse(str) shouldEqual
         Seq(Right(Activity("a", "p", 1, 2)), Left("couldn't parse line: 1"))
     }
   }
 
-  describe("Persistence#convert") {
+  describe("Repository#convert") {
     it("should convert activity") {
       val a = Activity("name", "project", 1, 2)
-      Repo.convert(a) shouldEqual 
+      RepositoryImpl.convert(a) shouldEqual 
         """{"name": "name", "project": "project",""" + 
         """ "from": 1, "to": 2, "seconds": 1}"""
     }
