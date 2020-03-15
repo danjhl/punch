@@ -22,17 +22,21 @@ object Repl {
   def start(project: String): Task[Unit] = {
     for {
       terminal <- IO { TerminalBuilder.terminal() }
-      _        <- loop(State(None, project), terminal)
-    } yield ()
+      reader   <- createReader(terminal)
+      _        <- loop(State(None, project), terminal, reader)
+      } yield ()
   }
 
-  private def loop(initial: State, terminal: Terminal): Task[Unit] = {
+  private def loop(
+    initial: State,
+    terminal: Terminal,
+    reader: LineReader): Task[Unit] = {
+
     for {
-      reader <- createReader(terminal)
       line   <- IO { reader.readLine(prompt) }.catchSome(onInterrupt(initial))
       state  <- onInput(line, initial)
       _      <- if (state.exit) IO { terminal.close() }
-                else loop(state, terminal)
+                else loop(state, terminal, reader)
     } yield ()
   }
 
