@@ -1,10 +1,17 @@
-package punch.cli
+package punch.io
 
-import scalaz.zio.IO
+import punch.model.Activity
+import scalaz.zio.{IO, Task}
 
-object DisplayText {
+trait Console {
+  def putStrLn(line: String): Task[Unit]
+}
+
+object ConsoleImpl {
   def putStrLn(msg: String) = IO { println(msg) }
+}
 
+object Text {
   def listActivities(activities: Seq[Activity]): String = {
     list(activities.map(a => (a.name, a.seconds.toString)))
   }

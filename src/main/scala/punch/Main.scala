@@ -1,7 +1,6 @@
 package punch
 
 import punch.cli.Cli
-import punch.cli.DisplayText._
 import scalaz.zio.{App, ZIO, IO}
 
 object Main extends App {

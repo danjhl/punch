@@ -1,6 +1,10 @@
-package punch.cli
+package punch.repl
 
-import punch.cli.DisplayText._
+import punch.io.ConsoleImpl.putStrLn
+import punch.io.Text
+import punch.io.RepositoryImpl
+import punch.model.Activity
+import punch.cli.Help
 import scala.util.{Success, Failure, Try}
 import scalaz.zio.{IO, Task, ZIO}
 import org.jline.terminal.{TerminalBuilder, Terminal}
@@ -16,7 +20,7 @@ case class State(
   exit: Boolean = false)
 
 object Repl {
-  private val repo = Repo
+  private val repo = RepositoryImpl
   private val prompt = s"${Console.BLUE}punch> "
 
   def start(project: String): Task[Unit] = {
@@ -24,7 +28,7 @@ object Repl {
       terminal <- IO { TerminalBuilder.terminal() }
       reader   <- createReader(terminal)
       _        <- loop(State(None, project), terminal, reader)
-      } yield ()
+    } yield ()
   }
 
   private def loop(
@@ -33,10 +37,10 @@ object Repl {
     reader: LineReader): Task[Unit] = {
 
     for {
-      line   <- IO { reader.readLine(prompt) }.catchSome(onInterrupt(initial))
-      state  <- onInput(line, initial)
-      _      <- if (state.exit) IO { terminal.close() }
-                else loop(state, terminal, reader)
+      line  <- IO { reader.readLine(prompt) }.catchSome(onInterrupt(initial))
+      state <- onInput(line, initial)
+      _     <- if (state.exit) IO { terminal.close() }
+               else loop(state, terminal, reader)
     } yield ()
   }
 
@@ -68,7 +72,7 @@ object Repl {
       line: String,
       state: State): Task[State] = {
 
-    Parser.parseLine(line).fold(
+    ReplParser.parseLine(line).fold(
       { err => putStrLn(err.message).map(_ => state) },
       {
         case ReplHelp()     => Help.show().map(_ => state)
@@ -95,36 +99,37 @@ object Repl {
       project: String) = {
     
     for {
-      date   <- IO { LocalDate.now() }
-      zoneId <- IO { ZoneId.systemDefault() }
-      seq    <- repo.readActivitiesFor(project).map {
-        _.filter(a => fn(a.from, date, zoneId))
-      }
-      effect <- printAct(seq)
-    } yield effect 
+      date       <- IO { LocalDate.now() }
+      zoneId     <- IO { ZoneId.systemDefault() }
+      activities <- repo.readActivitiesFor(project)
+      seq        <- IO { activities.filter(a => fn(a.from, date, zoneId)) }
+      _          <- printAct(seq)
+    } yield()
   }
 
   private def printAct(seq: Seq[Activity]) = {
-    putStrLn("\nactivities: \n\n" + DisplayText.listSums(seq) + "\n")
+    putStrLn("\nactivities: \n\n" + Text.listSums(seq) + "\n")
   }
 
   private def now(activity: String, state: State) = {
     for {
-      _      <- stop(state)
-      _      <- putStrLn(s"tracking ${state.project}/${activity}")
-      time   <- IO { Instant.now() }
+      _    <- stop(state)
+      _    <- putStrLn(s"tracking ${state.project}/${activity}")
+      time <- IO { Instant.now() }
     } yield state.copy(tracked = Some((activity, time.getEpochSecond())))
   }
 
   private def stop(state: State): Task[State] = {
-    state.tracked.map { case (a, time) =>
-      for {
-        end <- IO { Instant.now() }
-        act <- IO { Activity(a, state.project, time, end.getEpochSecond) }
-        _   <- repo.writeActivity(act)
-      } yield state.copy(tracked = None)
+    val project = state.project
+
+    state.tracked match {
+      case None                => IO.succeed(state)
+      case Some((name, start)) => 
+        for {
+          end <- IO { Instant.now().getEpochSecond }
+          _   <- repo.writeActivity(Activity(name, project, start, end))
+        } yield state.copy(tracked = None)
     }
-    .getOrElse(IO.succeed(state))
   }
 
   private def stopWithMessage(state: State): Task[State] = state.tracked match {
@@ -139,6 +144,9 @@ object Repl {
   }
 
   private def add(add: Add, state: State): Task[State] = {
+    val project = state.project
+    val name = add.activityName
+
     for {
       zoneId <- IO { ZoneId.systemDefault() }
       now    <- IO { Instant.now().atZone(zoneId).toLocalDate() }
@@ -153,24 +161,23 @@ object Repl {
       offset <- IO { OffsetDateTime.now().getOffset() }
       from   <- IO { fromD.toEpochSecond(offset) }
       to     <- IO { toD.toEpochSecond(offset) }
-      _      <- repo.writeActivity(
-        Activity(add.activityName, state.project, from, to))
+      _      <- repo.writeActivity(Activity(name, project, from, to))
     } yield state
   }
 
   private def summary(param: Option[SumTimePara]): Task[Unit] = {
     val off = param match {
-      case None => 0
-      case Some(SumDay(x)) => x
+      case None             => 0
+      case Some(SumDay(x))  => x
       case Some(SumWeek(x)) => x * 7
     }
     
     for {
       zoneId <- IO { ZoneId.systemDefault() }
-      date <- IO { LocalDate.now().minusDays(off) }
-      _ <- param match {
-        case None => Summary.showSummary(date, zoneId)
-        case Some(SumDay(_)) => Summary.showSummary(date, zoneId)
+      date   <- IO { LocalDate.now().minusDays(off) }
+      _      <- param match {
+        case None             => Summary.showSummary(date, zoneId)
+        case Some(SumDay(_))  => Summary.showSummary(date, zoneId)
         case Some(SumWeek(_)) => Summary.showWeekSummary(date)
       }
     } yield()

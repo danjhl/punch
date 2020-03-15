@@ -1,15 +1,19 @@
-package punch.cli
+package punch.repl
 
-import DisplayText.putStrLn
+import punch.io.ConsoleImpl.putStrLn
+import punch.io.Text
+import punch.io.RepositoryImpl
+import punch.model.Activity
 import scalaz.zio.{IO, Task, ZIO}
 
 import java.time.{LocalDate, Instant, ZoneId, OffsetDateTime}
+import java.time.format.DateTimeFormatter
 import org.jline.terminal.{TerminalBuilder, Terminal}
 import org.jline.reader.{LineReaderBuilder, LineReader}
 import org.jline.reader.UserInterruptException
 
 object Summary {
-  val repo = Repo
+  val repo = RepositoryImpl
 
   def showSummary(date: LocalDate, zoneId: ZoneId): Task[Unit] = {
     repo
@@ -19,7 +23,7 @@ object Summary {
       }
       .flatMap { seq =>
         if (seq.isEmpty) printSummary(date, "")
-        else             printSummary(date, DisplayText.listSums(seq))
+        else             printSummary(date, Text.listSums(seq))
       }
   }
 

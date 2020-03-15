@@ -2,7 +2,7 @@ package punch.cli
 
 import org.scalatest._
 
-class CommandsSpec extends FunSpec with Matchers {
+class CliCommandsSpec extends FunSpec with Matchers {
   describe("CliCommands") {
     it("should parse ls") {
       check("ls") shouldEqual Right(LsProjects())
@@ -22,9 +22,9 @@ class CommandsSpec extends FunSpec with Matchers {
     }
 
     it("should return unknown command") {
-      check("nothing", "really") shouldEqual Left(UnknownCommand())
+      check("nothing", "really") shouldEqual Left(UnknownCliCommand())
     }
   }
 
-  def check(args: String*) = CliCommands.interpret(Vector(args : _*))
+  def check(args: String*) = CliParser.parse(Vector(args : _*))
 }

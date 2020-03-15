@@ -1,10 +1,11 @@
-package punch.cli
+package punch.io
 
+import punch.model.Activity
 import org.scalatest._
 
-class DisplayTextSpec extends FunSpec with Matchers {
-  describe("DisplayText#listActivities") {
-    val check = DisplayText.listActivities(_)
+class TextSpec extends FunSpec with Matchers {
+  describe("Text#listActivities") {
+    val check = Text.listActivities(_)
 
     it("should prettyfy activity") {
       check(Vector(Activity("a", "p", 100, 200))) shouldEqual "a  ·  100"
@@ -29,8 +30,8 @@ class DisplayTextSpec extends FunSpec with Matchers {
     }
   }
 
-  describe("DisplayText#list") {
-    val check = DisplayText.list(_)
+  describe("Text#list") {
+    val check = Text.list(_)
 
     it("should create list of empty seq") {
       check(Seq()) shouldEqual ""
@@ -51,8 +52,8 @@ class DisplayTextSpec extends FunSpec with Matchers {
     }
   }
 
-  describe("DisplayText#listSum") {
-    val check = DisplayText.listSums(_)
+  describe("Text#listSum") {
+    val check = Text.listSums(_)
 
     it("should calculate and create a list of sums") {
       val v = Vector(

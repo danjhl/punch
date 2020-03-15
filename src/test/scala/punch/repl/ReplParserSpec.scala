@@ -1,10 +1,10 @@
-package punch.cli
+package punch.repl
 
 import org.scalatest._
 
 class ParserSpec extends FunSpec with Matchers {
   describe("Parser#parseLine") {
-    val check = Parser.parseLine(_)
+    val check = ReplParser.parseLine(_)
 
     it("should parse help") {
       check("help") shouldEqual Right(ReplHelp())

@@ -1,8 +1,8 @@
-package punch.cli
+package punch.repl
 
 import fastparse._, NoWhitespace._
 
-object Parser {
+object ReplParser {
   def parseLine(line: String): Either[ParseError, ReplCommand] = {
     parse(line, Expressions.replCommand(_)) match {
       case Parsed.Success(cmd, _)  => Right(cmd)
@@ -112,3 +112,4 @@ sealed trait SumTimePara
 
 case class SumDay(off: Int) extends SumTimePara
 case class SumWeek(off: Int) extends SumTimePara
+
