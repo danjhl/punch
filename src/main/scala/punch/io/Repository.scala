@@ -1,7 +1,7 @@
 package punch.io
 
 import punch.model.Activity
-import scalaz.zio.{IO, Task}
+import zio.{IO, Task}
 import scala.util.{Try, Success, Failure}
 import java.nio.file.{Files, Paths, StandardOpenOption, LinkOption, Path}
 

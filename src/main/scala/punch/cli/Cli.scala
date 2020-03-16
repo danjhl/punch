@@ -3,7 +3,7 @@ package punch.cli
 import punch.io.ConsoleImpl.putStrLn
 import punch.io.RepositoryImpl
 import punch.repl.Repl
-import scalaz.zio.{IO, Task}
+import zio.{IO, Task}
 import scala.util.Failure
 import scala.util.Success
 

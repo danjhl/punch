@@ -4,7 +4,7 @@ import punch.io.ConsoleImpl.putStrLn
 import punch.io.Text
 import punch.io.RepositoryImpl
 import punch.model.Activity
-import scalaz.zio.{IO, Task, ZIO}
+import zio.{IO, Task, ZIO}
 
 import java.time.{LocalDate, Instant, ZoneId, OffsetDateTime}
 import java.time.format.DateTimeFormatter
