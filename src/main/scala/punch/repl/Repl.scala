@@ -6,7 +6,7 @@ import punch.io.RepositoryImpl
 import punch.model.Activity
 import punch.cli.Help
 import scala.util.{Success, Failure, Try}
-import scalaz.zio.{IO, Task, ZIO}
+import zio.{IO, Task, ZIO}
 import org.jline.terminal.{TerminalBuilder, Terminal}
 import org.jline.reader.{LineReaderBuilder, LineReader, Candidate}
 import org.jline.reader.impl.completer.StringsCompleter

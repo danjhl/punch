@@ -1,10 +1,10 @@
 package punch
 
 import punch.cli.Cli
-import scalaz.zio.{App, ZIO, IO}
+import zio.{App, ZIO, IO}
 
 object Main extends App {
-  override def run(args: List[String]): ZIO[Environment, Nothing, Int] = {
+  override def run(args: List[String]) = {
     Cli
       .interpret(args)
       .catchAll(err => IO { scribe.error(err) })

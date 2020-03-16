@@ -1,7 +1,7 @@
 package punch.io
 
 import punch.model.Activity
-import scalaz.zio.{IO, Task}
+import zio.{IO, Task}
 
 trait Console {
   def putStrLn(line: String): Task[Unit]
