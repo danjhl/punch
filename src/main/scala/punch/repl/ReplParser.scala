@@ -19,6 +19,7 @@ private object Expressions {
     | rm
     | add
     | sum
+    | agenda
     | punch
     | stop
     | exit
@@ -32,16 +33,17 @@ private object Expressions {
   def rm[_ : P]       = P("rm" ~/ ws ~ (escaped | str)).map(c => Rm(c))
   def punch[_ : P]    = P("punch" ~/ ws ~ (escaped | str)).map(c => Punch(c))
   def sum[_ : P]      = P("sum" ~/ (ws ~ sumTimeP).? ).map(c => Sum(c))
+  def agenda[_ : P]   = P("agenda" ~/ (ws ~ sumTimeP).? ).map(c => Agenda(c))
   def add[_ : P]      = P("add" ~/ ws ~ str ~ ws ~ (date ~ ws).? ~ frame)
                           .map(toAdd)
 
   def timeP[_ : P]    = P(weekP | dayP)
-  def weekP[_ : P]    = P("-w").!.map(c => Week())
-  def dayP[_ : P]     = P("-d").!.map(c => Day())
+  def weekP[_ : P]    = P("-w").!.map(c => LsWeek())
+  def dayP[_ : P]     = P("-d").!.map(c => LsDay())
 
   def sumTimeP[_ : P] = P(sumWeekP | sumDayP)
-  def sumWeekP[_ : P] = P("-w" ~ ("-".? ~ digit ~ digit0.rep).!.?).map(toSumWeek)
-  def sumDayP[_ : P]  = P("-d" ~ ("-".? ~ digit ~ digit0.rep).!.?).map(toSumDay)
+  def sumWeekP[_ : P] = P("-w" ~ ("-".? ~ digit ~ digit0.rep).!.?).map(toWeek)
+  def sumDayP[_ : P]  = P("-d" ~ ("-".? ~ digit ~ digit0.rep).!.?).map(toDay)
 
   def str[_ : P]      = P(CharsWhile(_ != ' ')).!
   def ws[_ : P]       = P(CharsWhile(_ == ' '))
@@ -66,8 +68,8 @@ private object Expressions {
   type os = Option[String]
   type s = String
 
-  val toSumDay = (c: os) => SumDay(c.getOrElse("0").toInt)
-  val toSumWeek = (c: os) => SumWeek(c.getOrElse("0").toInt)
+  val toDay = (c: os) => Day(c.getOrElse("0").toInt)
+  val toWeek = (c: os) => Week(c.getOrElse("0").toInt)
   val toAdd = (c: (s, Option[(s, os, os)], (s, os, (s, os)))) => 
     Add(
       c._1,
@@ -90,7 +92,7 @@ case class Exit() extends ReplCommand
 case class Now(activityName: String) extends ReplCommand
 case class Rm(activityName: String) extends ReplCommand
 case class Punch(projectName: String) extends ReplCommand
-case class Ls(time: Option[TimePara]) extends ReplCommand
+case class Ls(time: Option[LsTimePara]) extends ReplCommand
 case class Add(
   activityName: String,
   day: Option[Int],
@@ -101,15 +103,16 @@ case class Add(
   stopHour: Int,
   stopMinute: Option[Int]) extends ReplCommand
 
+sealed trait LsTimePara
+
+case class LsDay() extends LsTimePara
+case class LsWeek() extends LsTimePara
+
+case class Sum(time: Option[TimePara]) extends ReplCommand
+case class Agenda(time: Option[TimePara]) extends ReplCommand
+
 sealed trait TimePara
 
-case class Day() extends TimePara
-case class Week() extends TimePara
-
-case class Sum(time: Option[SumTimePara]) extends ReplCommand
-
-sealed trait SumTimePara
-
-case class SumDay(off: Int) extends SumTimePara
-case class SumWeek(off: Int) extends SumTimePara
+case class Day(off: Int) extends TimePara
+case class Week(off: Int) extends TimePara
 

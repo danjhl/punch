@@ -1,6 +1,5 @@
-package punch.cli
+package punch.model
 
-import punch.model.Activity
 import org.scalatest._
 import java.time.{LocalDate, LocalTime, ZoneId, ZoneOffset, Month}
 

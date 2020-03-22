@@ -44,6 +44,7 @@ lazy val jarSettings =
 lazy val rootDeps =
   Seq(
     Deps.scalaTest % Test,
+    Deps.scalaMock % Test,
     Deps.scribe,
     Deps.zio,
     Deps.jlineNative,
@@ -52,6 +53,7 @@ lazy val rootDeps =
 lazy val jarDeps =
   Seq(
     Deps.scalaTest % Test,
+    Deps.scalaMock % Test,
     Deps.scribe,
     Deps.zio,
     Deps.jline,

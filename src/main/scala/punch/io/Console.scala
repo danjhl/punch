@@ -5,10 +5,12 @@ import zio.{IO, Task}
 
 trait Console {
   def putStrLn(line: String): Task[Unit]
+  def putStr(line: String): Task[Unit]
 }
 
-object ConsoleImpl {
+object ConsoleImpl extends Console {
   def putStrLn(msg: String) = IO { println(msg) }
+  def putStr(msg: String) = IO { print(msg) }
 }
 
 object Text {

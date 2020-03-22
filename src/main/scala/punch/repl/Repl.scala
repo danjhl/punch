@@ -1,8 +1,7 @@
 package punch.repl
 
+import punch.io.{Console, ConsoleImpl, Text, RepositoryImpl}
 import punch.io.ConsoleImpl.putStrLn
-import punch.io.Text
-import punch.io.RepositoryImpl
 import punch.model.Activity
 import punch.cli.Help
 import scala.util.{Success, Failure, Try}
@@ -80,7 +79,10 @@ object Repl {
         case Now(activity)  => now(activity, state)
         case Stop()         => stopWithMessage(state)
         case Exit()         => stop(state).map(_ => state.copy(exit = true))
-        case Sum(param)     => summary(param).map(_ => state)
+        case Sum(param)     => 
+          summary(param, state.project).map(_ => state).provide(ConsoleImpl)
+        case Agenda(param)  => 
+          agenda(param, state.project).map(_ => state).provide(ConsoleImpl)
         case a : Add        => add(a, state)
         case Rm(activity)   => rm(activity, state)
         case Punch(project) => stop(state).map(s => s.copy(project = project))
@@ -88,10 +90,10 @@ object Repl {
       })
   }
 
-  private def ls(para: Option[TimePara], state: State) = para match {
+  private def ls(para: Option[LsTimePara], state: State) = para match {
     case None         => repo.readActivitiesFor(state.project).flatMap(printAct)
-    case Some(Day())  => lsWith(Activity.onDay _, state.project)
-    case Some(Week()) => lsWith(Activity.inWeek _, state.project)
+    case Some(LsDay())  => lsWith(Activity.onDay _, state.project)
+    case Some(LsWeek()) => lsWith(Activity.inWeek _, state.project)
   }
 
   private def lsWith(
@@ -165,20 +167,48 @@ object Repl {
     } yield state
   }
 
-  private def summary(param: Option[SumTimePara]): Task[Unit] = {
-    val off = param match {
-      case None             => 0
-      case Some(SumDay(x))  => x
-      case Some(SumWeek(x)) => x * 7
-    }
+  private def summary(param: Option[TimePara], project: String): 
+      ZIO[Console, Throwable, Unit] = {
+
+    val off = offset(param)
     
     for {
+      activities <- repo.readActivitiesFor(project)
       zoneId <- IO { ZoneId.systemDefault() }
       date   <- IO { LocalDate.now().minusDays(off) }
       _      <- param match {
-        case None             => Summary.showSummary(date, zoneId)
-        case Some(SumDay(_))  => Summary.showSummary(date, zoneId)
-        case Some(SumWeek(_)) => Summary.showWeekSummary(date)
+        case None             => 
+          SummaryPrinter.printSummary(date, zoneId, activities)
+        case Some(Day(_))  => 
+          SummaryPrinter.printSummary(date, zoneId, activities)
+        case Some(Week(_)) => 
+          SummaryPrinter.printSummaryWeek(date, zoneId, activities)
+      }
+    } yield()
+  }
+
+  private def offset(param: Option[TimePara]) = param match {
+    case None             => 0
+    case Some(Day(x))  => x
+    case Some(Week(x)) => x * 7
+  }
+
+  private def agenda(param: Option[TimePara], project: String): 
+      ZIO[Console, Throwable, Unit] = {
+
+    val off = offset(param)
+
+    for {
+      activities <- repo.readActivitiesFor(project)
+      zoneId <- IO { ZoneId.systemDefault() }
+      date   <- IO { LocalDate.now().minusDays(off) }
+      _      <- param match {
+        case None             => 
+          AgendaPrinter.printAgenda(date, zoneId, activities)
+        case Some(Day(_))  => 
+          AgendaPrinter.printAgenda(date, zoneId, activities)
+        case Some(Week(_)) => 
+          AgendaPrinter.printAgendaWeek(date, zoneId, activities)
       }
     } yield()
   }
