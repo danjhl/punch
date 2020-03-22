@@ -18,7 +18,7 @@ lazy val jar =
 lazy val rootSettings =
   Seq(
     name                       := "punch",
-    version                    := "0.1.2-SNAPSHOT",
+    version                    := "0.1.3-SNAPSHOT",
     scalaVersion               := "2.12.8",
     organization               := "io.punch",
     organizationName           := "punch",
@@ -31,7 +31,7 @@ lazy val graalSettings =
 lazy val jarSettings =
   Seq(
     name                       := "punch-jar",
-    version                    := "0.1.2-SNAPSHOT",
+    version                    := "0.1.3-SNAPSHOT",
     scalaVersion               := "2.12.8",
     organization               := "io.punch",
     organizationName           := "punch",
