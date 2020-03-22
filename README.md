@@ -30,6 +30,10 @@ sum                                      show summary today
     sum -d[n]                            show summary today - n days  
     sum -w[n]                            show summary this week - n weeks
 
+agenda                                   show agenda today
+    agenda -d[n]                         show agenda today - n days  
+    agenda -w[n]                         show agenda this week - n weeks
+
 rm [activity]                            remove activity
 
 add [activity] [d[.m][.y]] h[:mm]-h[:mm] add activity manually
