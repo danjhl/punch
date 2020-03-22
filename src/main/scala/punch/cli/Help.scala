@@ -1,7 +1,7 @@
 package punch.cli
 
-import punch.cli.DisplayText._
-import scalaz.zio.Task
+import punch.io.ConsoleImpl._
+import zio.Task
 
 object Help {
   def show(): Task[Unit] = putStrLn(text)

@@ -1,4 +1,4 @@
-package punch.cli
+package punch.model
 
 import org.scalatest._
 import java.time.{LocalDate, LocalTime, ZoneId, ZoneOffset, Month}

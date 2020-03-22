@@ -1,10 +1,10 @@
-package punch.cli
+package punch.repl
 
 import org.scalatest._
 
 class ParserSpec extends FunSpec with Matchers {
   describe("Parser#parseLine") {
-    val check = Parser.parseLine(_)
+    val check = ReplParser.parseLine(_)
 
     it("should parse help") {
       check("help") shouldEqual Right(ReplHelp())
@@ -12,8 +12,8 @@ class ParserSpec extends FunSpec with Matchers {
 
     it("should parse ls") {
       check("ls") shouldEqual Right(Ls(None))
-      check("ls -w") shouldEqual Right(Ls(Some(Week())))
-      check("ls -d") shouldEqual Right(Ls(Some(Day())))
+      check("ls -w") shouldEqual Right(Ls(Some(LsWeek())))
+      check("ls -d") shouldEqual Right(Ls(Some(LsDay())))
     }
 
     it("should parse now") {
@@ -81,14 +81,26 @@ class ParserSpec extends FunSpec with Matchers {
 
     it("should parse sum") {
       check("sum") shouldEqual Right(Sum(None))
-      check("sum -d") shouldEqual Right(Sum(Some(SumDay(0))))
-      check("sum -d2") shouldEqual Right(Sum(Some(SumDay(2))))
-      check("sum -d-2") shouldEqual Right(Sum(Some(SumDay(-2))))
-      check("sum -d10") shouldEqual Right(Sum(Some(SumDay(10))))
-      check("sum -w") shouldEqual Right(Sum(Some(SumWeek(0))))
-      check("sum -w2") shouldEqual Right(Sum(Some(SumWeek(2))))
-      check("sum -w-2") shouldEqual Right(Sum(Some(SumWeek(-2))))
-      check("sum -w10") shouldEqual Right(Sum(Some(SumWeek(10))))
+      check("sum -d") shouldEqual Right(Sum(Some(Day(0))))
+      check("sum -d2") shouldEqual Right(Sum(Some(Day(2))))
+      check("sum -d-2") shouldEqual Right(Sum(Some(Day(-2))))
+      check("sum -d10") shouldEqual Right(Sum(Some(Day(10))))
+      check("sum -w") shouldEqual Right(Sum(Some(Week(0))))
+      check("sum -w2") shouldEqual Right(Sum(Some(Week(2))))
+      check("sum -w-2") shouldEqual Right(Sum(Some(Week(-2))))
+      check("sum -w10") shouldEqual Right(Sum(Some(Week(10))))
+    }
+
+    it("should parse agenda") {
+      check("agenda") shouldEqual Right(Agenda(None))
+      check("agenda -d") shouldEqual Right(Agenda(Some(Day(0))))
+      check("agenda -d2") shouldEqual Right(Agenda(Some(Day(2))))
+      check("agenda -d-2") shouldEqual Right(Agenda(Some(Day(-2))))
+      check("agenda -d10") shouldEqual Right(Agenda(Some(Day(10))))
+      check("agenda -w") shouldEqual Right(Agenda(Some(Week(0))))
+      check("agenda -w2") shouldEqual Right(Agenda(Some(Week(2))))
+      check("agenda -w-2") shouldEqual Right(Agenda(Some(Week(-2))))
+      check("agenda -w10") shouldEqual Right(Agenda(Some(Week(10))))
     }
   }
 }

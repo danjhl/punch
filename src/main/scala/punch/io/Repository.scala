@@ -1,6 +1,7 @@
-package punch.cli
+package punch.io
 
-import scalaz.zio.{IO, Task}
+import punch.model.Activity
+import zio.{IO, Task}
 import scala.util.{Try, Success, Failure}
 import java.nio.file.{Files, Paths, StandardOpenOption, LinkOption, Path}
 
@@ -13,7 +14,7 @@ trait Repository {
   def deleteProject(name: String): Task[Unit]
 }
 
-object Repo extends Repository {
+object RepositoryImpl extends Repository {
 
   private val dir = ".punch"
   private val file = "punch.store"

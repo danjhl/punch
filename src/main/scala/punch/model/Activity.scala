@@ -1,6 +1,7 @@
-package punch.cli
+package punch.model
 
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.ZoneId
 
 case class Activity(
@@ -32,5 +33,12 @@ object Activity {
       .ofEpochSecond(seconds)
       .atZone(zoneId)
       .toLocalDate()
+  }
+
+  def toDateTime(seconds: Long, zoneId: ZoneId): LocalDateTime = {
+    java.time.Instant
+      .ofEpochSecond(seconds)
+      .atZone(zoneId)
+      .toLocalDateTime()
   }
 }
