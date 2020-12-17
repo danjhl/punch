@@ -1,6 +1,5 @@
 # About
-punch is a commandline time tracking repl written in Scala
-and compiled using GraalVM.
+punch is a commandline time tracking repl.
 
 # Usage
 
