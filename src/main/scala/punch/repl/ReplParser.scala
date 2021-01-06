@@ -17,6 +17,7 @@ private object Expressions {
     | ls
     | now
     | rm
+    | time
     | add
     | sum
     | agenda
@@ -31,11 +32,11 @@ private object Expressions {
   def exit[_ : P]     = P("exit").!.map(c => Exit())
   def now[_ : P]      = P("now" ~/ ws ~ (escaped | str)).map(c => Now(c))
   def rm[_ : P]       = P("rm" ~/ ws ~ (escaped | str)).map(c => Rm(c))
+  def time[_: P]      = P("time" ~/ ws ~ (escaped | str)).map(c => Time(c))
   def punch[_ : P]    = P("punch" ~/ ws ~ (escaped | str)).map(c => Punch(c))
   def sum[_ : P]      = P("sum" ~/ (ws ~ sumTimeP).? ).map(c => Sum(c))
   def agenda[_ : P]   = P("agenda" ~/ (ws ~ sumTimeP).? ).map(c => Agenda(c))
-  def add[_ : P]      = P("add" ~/ ws ~ str ~ ws ~ (date ~ ws).? ~ frame)
-                          .map(toAdd)
+  def add[_ : P]      = P("add" ~/ ws ~ str ~ ws ~ (date ~ ws).? ~ frame).map(toAdd)
 
   def timeP[_ : P]    = P(weekP | dayP)
   def weekP[_ : P]    = P("-w").!.map(c => LsWeek())
@@ -56,8 +57,8 @@ private object Expressions {
   def month[_ : P]    = P("11" | "12" | digit)
   def year[_ : P]     = P(digit ~ digit0.rep)
 
-  def frame[_ : P]    = P(time ~ "-" ~/ time)
-  def time[_ : P]     = P(hour.! ~/ (":" ~/ minutes.!).?)
+  def frame[_ : P]    = P(timeStr ~ "-" ~/ timeStr)
+  def timeStr[_ : P]     = P(hour.! ~/ (":" ~/ minutes.!).?)
   def hour[_ : P]     = P("1" ~ digit0 | "2" ~ CharIn("0-4") | digit)
   def minutes[_ : P]  = P(CharIn("1-5") ~ digit0 | "0" ~ digit0)
 
@@ -93,6 +94,7 @@ case class Now(activityName: String) extends ReplCommand
 case class Rm(activityName: String) extends ReplCommand
 case class Punch(projectName: String) extends ReplCommand
 case class Ls(time: Option[LsTimePara]) extends ReplCommand
+case class Time(activityName: String) extends ReplCommand
 case class Add(
   activityName: String,
   day: Option[Int],
@@ -115,4 +117,3 @@ sealed trait TimePara
 
 case class Day(off: Int) extends TimePara
 case class Week(off: Int) extends TimePara
-

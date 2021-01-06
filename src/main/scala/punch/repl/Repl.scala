@@ -13,10 +13,7 @@ import org.jline.reader.UserInterruptException
 import java.time.{LocalDate, Instant, ZoneId, OffsetDateTime}
 
 
-case class State(
-  tracked: Option[(String, Long)],
-  project: String,
-  exit: Boolean = false)
+case class State(tracked: Option[(String, Long)], project: String, exit: Boolean = false)
 
 object Repl {
   private val repo = RepositoryImpl
@@ -30,16 +27,11 @@ object Repl {
     } yield ()
   }
 
-  private def loop(
-    initial: State,
-    terminal: Terminal,
-    reader: LineReader): Task[Unit] = {
-
+  private def loop(initial: State, terminal: Terminal, reader: LineReader): Task[Unit] = {
     for {
       line  <- IO { reader.readLine(prompt) }.catchSome(onInterrupt(initial))
       state <- onInput(line, initial)
-      _     <- if (state.exit) IO { terminal.close() }
-               else loop(state, terminal, reader)
+      _     <- if (state.exit) IO { terminal.close() } else loop(state, terminal, reader)
     } yield ()
   }
 
@@ -61,16 +53,10 @@ object Repl {
     } yield reader
   }
 
-  private def activityCmd(line: String) =
-    line.matches("((now)\\s*?.*)|((rm)\\s*?.*)|((add)\\s*?.*)")
-    
-  private def projectCmd(line: String) = 
-    line.matches("((punch)\\s*?.*)")
+  private def activityCmd(line: String) = line.matches("((now)\\s*?.*)|((rm)\\s*?.*)|((add)\\s*?.*)")
+  private def projectCmd(line: String) = line.matches("((punch)\\s*?.*)")
 
-  private def onInput(
-      line: String,
-      state: State): Task[State] = {
-
+  private def onInput(line: String, state: State): Task[State] = {
     ReplParser.parseLine(line).fold(
       { err => putStrLn(err.message).map(_ => state) },
       {
@@ -79,27 +65,23 @@ object Repl {
         case Now(activity)  => now(activity, state)
         case Stop()         => stopWithMessage(state)
         case Exit()         => stop(state).map(_ => state.copy(exit = true))
-        case Sum(param)     => 
-          summary(param, state.project).map(_ => state).provide(ConsoleImpl)
-        case Agenda(param)  => 
-          agenda(param, state.project).map(_ => state).provide(ConsoleImpl)
+        case Sum(param)     => summary(param, state.project).map(_ => state).provide(ConsoleImpl)
+        case Agenda(param)  => agenda(param, state.project).map(_ => state).provide(ConsoleImpl)
         case a : Add        => add(a, state)
         case Rm(activity)   => rm(activity, state)
+        case Time(activity) => time(activity, state)
         case Punch(project) => stop(state).map(s => s.copy(project = project))
         case _              => putStrLn("unknown command").map(_ => state)
       })
   }
 
   private def ls(para: Option[LsTimePara], state: State) = para match {
-    case None         => repo.readActivitiesFor(state.project).flatMap(printAct)
+    case None           => repo.readActivitiesFor(state.project).flatMap(printAct)
     case Some(LsDay())  => lsWith(Activity.onDay _, state.project)
     case Some(LsWeek()) => lsWith(Activity.inWeek _, state.project)
   }
 
-  private def lsWith(
-      fn: (Long, LocalDate, ZoneId) => Boolean,
-      project: String) = {
-    
+  private def lsWith(fn: (Long, LocalDate, ZoneId) => Boolean, project: String) = {
     for {
       date       <- IO { LocalDate.now() }
       zoneId     <- IO { ZoneId.systemDefault() }
@@ -132,6 +114,8 @@ object Repl {
           _   <- repo.writeActivity(Activity(name, project, start, end))
         } yield state.copy(tracked = None)
     }
+
+
   }
 
   private def stopWithMessage(state: State): Task[State] = state.tracked match {
@@ -143,6 +127,23 @@ object Repl {
     repo
       .deleteActivities(activity, state.project)
       .map(_ => state)
+  }
+
+  private def time(activity: String, state: State): Task[State] = {
+    repo
+      .readActivitiesFor(state.project)
+      .map(activities => activities.filter(a => a.name == activity))
+      .map(activities => activities.map(a => a.seconds))
+      .map(activities => activities.sum)
+      .map(_ => state)
+
+    for {
+      activities <- repo.readActivitiesFor(state.project)
+      _          <- {
+        val seconds = activities.filter(a => a.name == activity).map(a => a.seconds).sum
+        putStrLn(s"tracked ${Text.time(seconds)}")
+      }
+    } yield state
   }
 
   private def add(add: Add, state: State): Task[State] = {
@@ -171,51 +172,41 @@ object Repl {
       ZIO[Console, Throwable, Unit] = {
 
     val off = offset(param)
+    val printSummary = param match {
+      case Some(Week(_)) => SummaryPrinter.printSummaryWeek(_, _, _)
+      case _             => SummaryPrinter.printSummary(_, _, _)
+    }
     
     for {
       activities <- repo.readActivitiesFor(project)
       zoneId <- IO { ZoneId.systemDefault() }
       date   <- IO { LocalDate.now().minusDays(off) }
-      _      <- param match {
-        case None             => 
-          SummaryPrinter.printSummary(date, zoneId, activities)
-        case Some(Day(_))  => 
-          SummaryPrinter.printSummary(date, zoneId, activities)
-        case Some(Week(_)) => 
-          SummaryPrinter.printSummaryWeek(date, zoneId, activities)
-      }
+      _      <- printSummary(date, zoneId, activities)
     } yield()
   }
 
   private def offset(param: Option[TimePara]) = param match {
-    case None             => 0
+    case None          => 0
     case Some(Day(x))  => x
     case Some(Week(x)) => x * 7
   }
 
-  private def agenda(param: Option[TimePara], project: String): 
-      ZIO[Console, Throwable, Unit] = {
-
+  private def agenda(param: Option[TimePara], project: String): ZIO[Console, Throwable, Unit] = {
     val off = offset(param)
+    val printAgenda = param match {
+      case Some(Week(_)) => AgendaPrinter.printAgendaWeek(_, _, _)
+      case _             => AgendaPrinter.printAgenda(_, _, _)
+    }
 
     for {
       activities <- repo.readActivitiesFor(project)
-      zoneId <- IO { ZoneId.systemDefault() }
-      date   <- IO { LocalDate.now().minusDays(off) }
-      _      <- param match {
-        case None             => 
-          AgendaPrinter.printAgenda(date, zoneId, activities)
-        case Some(Day(_))  => 
-          AgendaPrinter.printAgenda(date, zoneId, activities)
-        case Some(Week(_)) => 
-          AgendaPrinter.printAgendaWeek(date, zoneId, activities)
-      }
+      zoneId     <- IO { ZoneId.systemDefault() }
+      date       <- IO { LocalDate.now().minusDays(off) }
+      _          <- printAgenda(date, zoneId, activities)
     } yield()
   }
 
-  private def onInterrupt(state: State): 
-      PartialFunction[Throwable, ZIO[Any, Throwable, String]] = { 
-
+  private def onInterrupt(state: State): PartialFunction[Throwable, ZIO[Any, Throwable, String]] = { 
     case _ : UserInterruptException => 
       state.tracked match {
         case None => IO.succeed("exit")

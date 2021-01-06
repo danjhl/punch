@@ -24,8 +24,7 @@ object Activity {
   }
 
   def onDay(seconds: Long, day: LocalDate, zoneId: ZoneId): Boolean = {
-    val date = toDate(seconds, zoneId)
-    date.compareTo(day) == 0
+    toDate(seconds, zoneId).compareTo(day) == 0
   }
 
   def toDate(seconds: Long, zoneId: ZoneId): LocalDate = {

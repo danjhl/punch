@@ -19,10 +19,10 @@ class TextSpec extends FunSpec with Matchers {
         Activity("other", "p", 10, 100010))
 
       check(v) shouldEqual 
-        """|alongname  ·  100000
-           |a  · · · · · · · 200
-           |ashort · · · ·  1000
-           |other  · · ·  100000""".stripMargin
+        "alongname  ·  100000\n" +
+        "a  · · · · · · · 200\n" +
+        "ashort · · · ·  1000\n" +
+        "other  · · ·  100000"
     }
 
     it("should prettyfy empty seq") {
@@ -45,10 +45,10 @@ class TextSpec extends FunSpec with Matchers {
         ("ashort", "100000"))
 
       check(s) shouldEqual 
-        """|alongname  ·  100000
-           |a  · · · · · · · 200
-           |ashort · · · ·  1000
-           |ashort · · ·  100000""".stripMargin
+        "alongname  ·  100000\n" +
+        "a  · · · · · · · 200\n" + 
+        "ashort · · · ·  1000\n" +
+        "ashort · · ·  100000" 
     }
   }
 
@@ -63,8 +63,8 @@ class TextSpec extends FunSpec with Matchers {
         Activity("two", "p", 10, 20))
 
       check(v) shouldEqual
-        """|onelongname  ·  27 h 50 m
-           |two  · · · · ·   0 h  0 m""".stripMargin
+        "onelongname  ·  27 h 50 m\n" +
+        "two  · · · · ·   0 h  0 m"
     }
   }
 }

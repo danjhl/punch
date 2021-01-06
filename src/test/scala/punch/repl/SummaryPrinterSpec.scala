@@ -15,35 +15,21 @@ class SummaryPrinterSpec extends FunSpec with Matchers with MockFactory {
       val activities = Seq()
 
       val expected =
-        """
-        |MONDAY - 2020-03-16
-        |──────────────────────
-        |
-        |
-        |TUESDAY - 2020-03-17
-        |──────────────────────
-        |
-        |
-        |WEDNESDAY - 2020-03-18
-        |──────────────────────
-        |
-        |
-        |THURSDAY - 2020-03-19
-        |──────────────────────
-        |
-        |
-        |FRIDAY - 2020-03-20
-        |──────────────────────
-        |
-        |
-        |SATURDAY - 2020-03-21
-        |──────────────────────
-        |
-        |
-        |SUNDAY - 2020-03-22
-        |──────────────────────
-        |
-        |"""
+        "\n" +
+        "MONDAY - 2020-03-16\n" +
+        "──────────────────────\n\n\n" +
+        "TUESDAY - 2020-03-17\n" +
+        "──────────────────────\n\n\n" +
+        "WEDNESDAY - 2020-03-18\n" +
+        "──────────────────────\n\n\n" +
+        "THURSDAY - 2020-03-19\n" +
+        "──────────────────────\n\n\n" +
+        "FRIDAY - 2020-03-20\n" +
+        "──────────────────────\n\n\n" +
+        "SATURDAY - 2020-03-21\n" +
+        "──────────────────────\n\n\n" +
+        "SUNDAY - 2020-03-22\n" +
+        "──────────────────────\n\n"
 
       checkPrintSummaryWeek(activities, expected)
     }
@@ -58,36 +44,32 @@ class SummaryPrinterSpec extends FunSpec with Matchers with MockFactory {
         Activity("activity", "project", date(20, 22, 0), date(21, 4, 0)))
 
       val expected =
-        """
-        |MONDAY - 2020-03-16
-        |──────────────────────
-        |activity · ·  0 h 10 m
-        |
-        |TUESDAY - 2020-03-17
-        |──────────────────────
-        |activity1  ·   1 h  0 m
-        |activity2  ·   1 h  0 m
-        |
-        |WEDNESDAY - 2020-03-18
-        |──────────────────────
-        |activity · ·  0 h  0 m
-        |
-        |THURSDAY - 2020-03-19
-        |──────────────────────
-        |activity · ·  0 h  0 m
-        |
-        |FRIDAY - 2020-03-20
-        |──────────────────────
-        |activity · ·  6 h  0 m
-        |
-        |SATURDAY - 2020-03-21
-        |──────────────────────
-        |
-        |
-        |SUNDAY - 2020-03-22
-        |──────────────────────
-        |
-        |"""
+        "\n" +
+        "MONDAY - 2020-03-16\n" +
+        "──────────────────────\n" +
+        "activity · ·  0 h 10 m\n" +
+        "\n" +
+        "TUESDAY - 2020-03-17\n" +
+        "──────────────────────\n" +
+        "activity1  ·   1 h  0 m\n" +
+        "activity2  ·   1 h  0 m\n" +
+        "\n" +
+        "WEDNESDAY - 2020-03-18\n" +
+        "──────────────────────\n" +
+        "activity · ·  0 h  0 m\n" +
+        "\n" +
+        "THURSDAY - 2020-03-19\n" +
+        "──────────────────────\n" +
+        "activity · ·  0 h  0 m\n" +
+        "\n" +
+        "FRIDAY - 2020-03-20\n" +
+        "──────────────────────\n" +
+        "activity · ·  6 h  0 m\n" +
+        "\n" +
+        "SATURDAY - 2020-03-21\n" +
+        "──────────────────────\n\n\n" +
+        "SUNDAY - 2020-03-22\n" +
+        "──────────────────────\n\n"
 
       checkPrintSummaryWeek(activities, expected)
     }
@@ -97,11 +79,10 @@ class SummaryPrinterSpec extends FunSpec with Matchers with MockFactory {
     it("should print summary without activity") {
       val activities = Seq()
 
-      val expected = """
-          |FRIDAY - 2020-03-20
-          |──────────────────────
-          |
-          |"""
+      val expected =
+        "\n" +
+        "FRIDAY - 2020-03-20\n" +
+        "──────────────────────\n\n"
 
       checkPrintSummary(activities, expected)
     }
@@ -110,11 +91,11 @@ class SummaryPrinterSpec extends FunSpec with Matchers with MockFactory {
       val activities = Seq(
         Activity("activity", "project", date(20, 10, 0), date(20, 10, 20)))
 
-      val expected = """
-          |FRIDAY - 2020-03-20
-          |──────────────────────
-          |activity · ·  0 h 20 m
-          |"""
+      val expected =
+        "\n" +
+        "FRIDAY - 2020-03-20\n" +
+        "──────────────────────\n" +
+        "activity · ·  0 h 20 m\n"
 
       checkPrintSummary(activities, expected)
     }
@@ -124,12 +105,12 @@ class SummaryPrinterSpec extends FunSpec with Matchers with MockFactory {
         Activity("activity1", "project", date(20, 5, 10), date(20, 7, 55)),
         Activity("activity2", "project", date(20, 7, 55), date(20, 8, 15)))
 
-      val expected = """
-        |FRIDAY - 2020-03-20
-        |──────────────────────
-        |activity1  ·   2 h 45 m
-        |activity2  ·   0 h 20 m
-        |"""
+      val expected =
+        "\n" +
+        "FRIDAY - 2020-03-20\n" +
+        "──────────────────────\n" +
+        "activity1  ·   2 h 45 m\n" +
+        "activity2  ·   0 h 20 m\n"
 
       checkPrintSummary(activities, expected)
     }

@@ -15,35 +15,21 @@ class AgendaPrinterSpec extends FunSpec with Matchers with MockFactory {
       val activities = Seq()
 
       val expected =
-        """
-        |MONDAY - 2020-03-16
-        |──────────────────────
-        |
-        |
-        |TUESDAY - 2020-03-17
-        |──────────────────────
-        |
-        |
-        |WEDNESDAY - 2020-03-18
-        |──────────────────────
-        |
-        |
-        |THURSDAY - 2020-03-19
-        |──────────────────────
-        |
-        |
-        |FRIDAY - 2020-03-20
-        |──────────────────────
-        |
-        |
-        |SATURDAY - 2020-03-21
-        |──────────────────────
-        |
-        |
-        |SUNDAY - 2020-03-22
-        |──────────────────────
-        |
-        |"""
+        "\n" +
+        "MONDAY - 2020-03-16\n" +
+        "──────────────────────\n\n\n" +
+        "TUESDAY - 2020-03-17\n" +
+        "──────────────────────\n\n\n" +
+        "WEDNESDAY - 2020-03-18\n" +
+        "──────────────────────\n\n\n" +
+        "THURSDAY - 2020-03-19\n" +
+        "──────────────────────\n\n\n" +
+        "FRIDAY - 2020-03-20\n" +
+        "──────────────────────\n\n\n" +
+        "SATURDAY - 2020-03-21\n" +
+        "──────────────────────\n\n\n" +
+        "SUNDAY - 2020-03-22\n" +
+        "──────────────────────\n\n"
 
       checkPrintAgendaWeek(activities, expected)
     }
@@ -58,36 +44,34 @@ class AgendaPrinterSpec extends FunSpec with Matchers with MockFactory {
         Activity("activity", "project", date(20, 22, 0), date(21, 4, 0)))
 
       val expected =
-        """
-        |MONDAY - 2020-03-16
-        |──────────────────────
-        |activity · · 12:20 - 12:30
-        |
-        |TUESDAY - 2020-03-17
-        |──────────────────────
-        |activity1  ·  13:20 - 14:20
-        |activity2  ·  14:20 - 15:20
-        |
-        |WEDNESDAY - 2020-03-18
-        |──────────────────────
-        |activity · · 15:20 - 15:20
-        |
-        |THURSDAY - 2020-03-19
-        |──────────────────────
-        |activity · · 15:20 - 15:20
-        |
-        |FRIDAY - 2020-03-20
-        |──────────────────────
-        |activity · · 22:00 - 04:00
-        |
-        |SATURDAY - 2020-03-21
-        |──────────────────────
-        |
-        |
-        |SUNDAY - 2020-03-22
-        |──────────────────────
-        |
-        |"""
+        "\n" +
+        "MONDAY - 2020-03-16\n" +
+        "──────────────────────\n" +
+        "activity · · 12:20 - 12:30\n" +
+        "\n" +
+        "TUESDAY - 2020-03-17\n" +
+        "──────────────────────\n" +
+        "activity1  ·  13:20 - 14:20\n" +
+        "activity2  ·  14:20 - 15:20\n" +
+        "\n" +
+        "WEDNESDAY - 2020-03-18\n" +
+        "──────────────────────\n" +
+        "activity · · 15:20 - 15:20\n" +
+        "\n" +
+        "THURSDAY - 2020-03-19\n" +
+        "──────────────────────\n" +
+        "activity · · 15:20 - 15:20\n" +
+        "\n" +
+        "FRIDAY - 2020-03-20\n" +
+        "──────────────────────\n" +
+        "activity · · 22:00 - 04:00\n" +
+        "\n" +
+        "SATURDAY - 2020-03-21\n" +
+        "──────────────────────\n" +
+        "\n" +
+        "\n" +
+        "SUNDAY - 2020-03-22\n" +
+        "──────────────────────\n\n"
 
       checkPrintAgendaWeek(activities, expected)
     }
@@ -97,11 +81,10 @@ class AgendaPrinterSpec extends FunSpec with Matchers with MockFactory {
     it("should print agenda for no activities") {
       val activities = Seq()
 
-      val expected = """
-          |FRIDAY - 2020-03-20
-          |──────────────────────
-          |
-          |"""
+      val expected =
+        "\n" +
+        "FRIDAY - 2020-03-20\n" +
+        "──────────────────────\n\n"
 
       checkPrintAgenda(activities, expected)
     }
@@ -110,11 +93,11 @@ class AgendaPrinterSpec extends FunSpec with Matchers with MockFactory {
       val activities = Seq(
         Activity("activity", "project", date(20, 22, 0), date(20, 23, 0)))
 
-      val expected = """
-          |FRIDAY - 2020-03-20
-          |──────────────────────
-          |activity · · 22:00 - 23:00
-          |"""
+      val expected =
+        "\n" +
+        "FRIDAY - 2020-03-20\n" +
+        "──────────────────────\n" +
+        "activity · · 22:00 - 23:00\n"
 
       checkPrintAgenda(activities, expected)
     }
@@ -124,12 +107,12 @@ class AgendaPrinterSpec extends FunSpec with Matchers with MockFactory {
         Activity("activity1", "project", date(20, 4, 25), date(20, 7, 10)),
         Activity("activity2", "project", date(20, 22, 0), date(20, 23, 0)))
 
-      val expected = """
-        |FRIDAY - 2020-03-20
-        |──────────────────────
-        |activity1  ·  04:25 - 07:10
-        |activity2  ·  22:00 - 23:00
-        |"""
+      val expected =
+        "\n" +
+        "FRIDAY - 2020-03-20\n" +
+        "──────────────────────\n" +
+        "activity1  ·  04:25 - 07:10\n" +
+        "activity2  ·  22:00 - 23:00\n"
 
       checkPrintAgenda(activities, expected)
     }

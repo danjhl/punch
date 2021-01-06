@@ -1,6 +1,5 @@
 # About
-punch is a commandline time tracking repl written in Scala
-and compiled using GraalVM.
+punch is a commandline time tracking repl.
 
 # Usage
 
@@ -21,6 +20,7 @@ now [activity]                           start tracking activity
 punch [project]                          switch to project
 stop                                     stop tracking activity
 exit                                     leave project
+time [activity]                          show time spend on activity
 
 ls                                       list activities
     ls -d                                list activities today
