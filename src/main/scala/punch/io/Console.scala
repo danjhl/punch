@@ -28,7 +28,7 @@ object Text {
     list(set.toSeq)
   }
 
-  private def time(seconds: Long) = {
+  def time(seconds: Long) = {
     val hours = seconds / 3600
     val minutes = seconds % 3600 / 60
     f"$hours%2d h $minutes%2d m"
