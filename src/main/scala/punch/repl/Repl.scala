@@ -5,7 +5,7 @@ import punch.io.ConsoleImpl.putStrLn
 import punch.model.Activity
 import punch.cli.Help
 import scala.util.{Success, Failure, Try}
-import zio.{IO, Task, ZIO}
+import zio.{IO, Task, ZIO, Runtime}
 import org.jline.terminal.{TerminalBuilder, Terminal}
 import org.jline.reader.{LineReaderBuilder, LineReader, Candidate}
 import org.jline.reader.impl.completer.StringsCompleter
@@ -37,11 +37,12 @@ object Repl {
 
   private def createReader(terminal: Terminal): Task[LineReader] = {
     for {
-      projects   <- repo.readProjects()
-      activities <- repo.readActivities()
       reader     <- IO { 
         LineReaderBuilder.builder()
           .completer { (reader, line, candidates) =>
+            val projects = Runtime.default.unsafeRun(repo.readProjects())
+            val activities = Runtime.default.unsafeRun(repo.readActivities())
+
             if (activityCmd(line.line))
               activities.foreach(a => candidates.add(new Candidate(a.name)))
             if (projectCmd(line.line))
@@ -119,8 +120,6 @@ object Repl {
           _   <- repo.writeActivity(Activity(name, project, start, end))
         } yield state.copy(tracked = None)
     }
-
-
   }
 
   private def stopWithMessage(state: State): Task[State] = state.tracked match {
