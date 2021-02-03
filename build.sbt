@@ -9,7 +9,7 @@ lazy val root = project
 
 lazy val rootSettings = Seq(
   name                       := "punch",
-  version                    := "0.1.3",
+  version                    := "0.1.4",
   scalaVersion               := "2.12.8",
   organization               := "io.punch",
   organizationName           := "punch",
