@@ -53,7 +53,12 @@ object Repl {
     } yield reader
   }
 
-  private def activityCmd(line: String) = line.matches("((now)\\s*?.*)|((rm)\\s*?.*)|((add)\\s*?.*)")
+  private def activityCmd(line: String) = line.matches(
+    "((now)\\s*?.*)|"
+    + "((rm)\\s*?.*)|"
+    + "((add)\\s*?.*)|"
+    + "((time)\\s*?.*)")
+
   private def projectCmd(line: String) = line.matches("((punch)\\s*?.*)")
 
   private def onInput(line: String, state: State): Task[State] = {
