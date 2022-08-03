@@ -102,5 +102,11 @@ class ParserSpec extends FunSpec with Matchers {
       check("agenda -w-2") shouldEqual Right(Agenda(Some(Week(-2))))
       check("agenda -w10") shouldEqual Right(Agenda(Some(Week(10))))
     }
+
+    it("should parse today") {
+      check("today") shouldEqual Right(Today(None))
+      check("today -e break") shouldEqual Right(Today(Some(Seq("break"))))
+      check("today -e break something") shouldEqual Right(Today(Some(Seq("break", "something"))))
+    }
   }
 }

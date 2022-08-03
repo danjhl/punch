@@ -18,6 +18,7 @@ private object Expressions {
     | now
     | rm
     | time
+    | today
     | add
     | sum
     | agenda
@@ -37,6 +38,7 @@ private object Expressions {
   def sum[_ : P]      = P("sum" ~/ (ws ~ sumTimeP).? ).map(c => Sum(c))
   def agenda[_ : P]   = P("agenda" ~/ (ws ~ sumTimeP).? ).map(c => Agenda(c))
   def add[_ : P]      = P("add" ~/ ws ~ str ~ ws ~ (date ~ ws).? ~ frame).map(toAdd)
+  def today[_ : P]    = P("today" ~/ (ws ~ excludeP).?).map(c => Today(c))
 
   def timeP[_ : P]    = P(weekP | dayP)
   def weekP[_ : P]    = P("-w").!.map(c => LsWeek())
@@ -45,6 +47,8 @@ private object Expressions {
   def sumTimeP[_ : P] = P(sumWeekP | sumDayP)
   def sumWeekP[_ : P] = P("-w" ~ ("-".? ~ digit ~ digit0.rep).!.?).map(toWeek)
   def sumDayP[_ : P]  = P("-d" ~ ("-".? ~ digit ~ digit0.rep).!.?).map(toDay)
+
+  def excludeP[_ : P] = P("-e" ~ (ws ~ str).rep)
 
   def str[_ : P]      = P(CharsWhile(_ != ' ')).!
   def ws[_ : P]       = P(CharsWhile(_ == ' '))
@@ -58,7 +62,7 @@ private object Expressions {
   def year[_ : P]     = P(digit ~ digit0.rep)
 
   def frame[_ : P]    = P(timeStr ~ "-" ~/ timeStr)
-  def timeStr[_ : P]     = P(hour.! ~/ (":" ~/ minutes.!).?)
+  def timeStr[_ : P]  = P(hour.! ~/ (":" ~/ minutes.!).?)
   def hour[_ : P]     = P("1" ~ digit0 | "2" ~ CharIn("0-4") | digit)
   def minutes[_ : P]  = P(CharIn("1-5") ~ digit0 | "0" ~ digit0)
 
@@ -104,6 +108,7 @@ case class Add(
   startMinute: Option[Int],
   stopHour: Int,
   stopMinute: Option[Int]) extends ReplCommand
+case class Today(excluded: Option[Seq[String]]) extends ReplCommand
 
 sealed trait LsTimePara
 
