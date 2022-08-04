@@ -42,5 +42,8 @@ add [activity] [d[.m][.y]] h[:mm]-h[:mm] add activity manually
     add x 10 10:30-11:30                 adds activity x at 10th day of current month
     add x 10.1.1999 10-11                adds activity x on specified date
 
+today                                    show sum of tracked time today
+    today -e [activity]                  show sum of tracked time excluding activity
+
 use <TAB> to autocomplete activity and project names
 ```

@@ -58,7 +58,8 @@ object Repl {
     "((now)\\s*?.*)|"
     + "((rm)\\s*?.*)|"
     + "((add)\\s*?.*)|"
-    + "((time)\\s*?.*)")
+    + "((time)\\s*?.*)|"
+    + "((today)\\s*?.*)")
 
   private def projectCmd(line: String) = line.matches("((punch)\\s*?.*)")
 
@@ -76,6 +77,7 @@ object Repl {
         case a : Add        => add(a, state)
         case Rm(activity)   => rm(activity, state)
         case Time(activity) => time(activity, state)
+        case Today(exclude) => today(exclude, state)
         case Punch(project) => stop(state).map(s => s.copy(project = project))
         case _              => putStrLn("unknown command").map(_ => state)
       })
@@ -134,18 +136,27 @@ object Repl {
   }
 
   private def time(activity: String, state: State): Task[State] = {
-    repo
-      .readActivitiesFor(state.project)
-      .map(activities => activities.filter(a => a.name == activity))
-      .map(activities => activities.map(a => a.seconds))
-      .map(activities => activities.sum)
-      .map(_ => state)
-
     for {
       activities <- repo.readActivitiesFor(state.project)
       _          <- {
         val seconds = activities.filter(a => a.name == activity).map(a => a.seconds).sum
         putStrLn(s"tracked ${Text.time(seconds)}")
+      }
+    } yield state
+  }
+
+  private def today(exclude: Option[Seq[String]], state: State): Task[State] = {
+    for {
+      date       <- IO { LocalDate.now() }
+      zoneId     <- IO { ZoneId.systemDefault() }
+      activities <- repo.readActivitiesFor(state.project)
+      _          <- {
+        val seconds = activities
+          .filter(a => exclude.map(it => !it.contains(a.name)).getOrElse(true))
+          .filter(a => Activity.onDay(a.from, date, zoneId))
+          .map(a => a.seconds)
+          .sum
+        putStrLn(s"today ${Text.time(seconds)}")
       }
     } yield state
   }
